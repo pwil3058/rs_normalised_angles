@@ -202,6 +202,42 @@ where
     }
 }
 
+pub trait AngleConst {
+    const DEG_0: Self;
+    const DEG_30: Self;
+    const DEG_45: Self;
+    const DEG_60: Self;
+    const DEG_90: Self;
+    const DEG_120: Self;
+    const DEG_135: Self;
+    const DEG_150: Self;
+    const DEG_180: Self;
+}
+
+impl AngleConst for Angle<f64> {
+    const DEG_0: Self = Self(0.0);
+    const DEG_30: Self = Self(std::f64::consts::FRAC_PI_6);
+    const DEG_45: Self = Self(std::f64::consts::FRAC_PI_4);
+    const DEG_60: Self = Self(std::f64::consts::FRAC_PI_3);
+    const DEG_90: Self = Self(std::f64::consts::FRAC_PI_2);
+    const DEG_120: Self = Self(std::f64::consts::FRAC_PI_3 * 2.0);
+    const DEG_135: Self = Self(std::f64::consts::FRAC_PI_4 * 3.0);
+    const DEG_150: Self = Self(std::f64::consts::FRAC_PI_6 * 5.0);
+    const DEG_180: Self = Self(std::f64::consts::PI);
+}
+
+impl AngleConst for Angle<f32> {
+    const DEG_0: Self = Self(0.0);
+    const DEG_30: Self = Self(std::f32::consts::FRAC_PI_6);
+    const DEG_45: Self = Self(std::f32::consts::FRAC_PI_4);
+    const DEG_60: Self = Self(std::f32::consts::FRAC_PI_3);
+    const DEG_90: Self = Self(std::f32::consts::FRAC_PI_2);
+    const DEG_120: Self = Self(std::f32::consts::FRAC_PI_3 * 2.0);
+    const DEG_135: Self = Self(std::f32::consts::FRAC_PI_4 * 3.0);
+    const DEG_150: Self = Self(std::f32::consts::FRAC_PI_6 * 5.0);
+    const DEG_180: Self = Self(std::f32::consts::PI);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
