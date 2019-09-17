@@ -11,7 +11,7 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash)]
 pub struct Angle<F: Float + FloatConst + NumAssign + NumOps>(F);
 
 impl<F: Float + FloatConst + NumAssign + NumOps> Angle<F> {
