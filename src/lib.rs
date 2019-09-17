@@ -40,6 +40,10 @@ impl<F: Float + FloatConst + NumAssign + NumOps> Angle<F> {
         }
     }
 
+    pub fn abs(self) -> Self {
+        Self(self.0.abs())
+    }
+
     pub fn from_radians(f: F) -> Self {
         f.into()
     }
