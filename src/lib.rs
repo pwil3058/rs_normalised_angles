@@ -5,26 +5,36 @@
 #[macro_use]
 extern crate serde_derive;
 
-use num::traits::{Float, FloatConst, NumAssign, NumOps};
+use num::traits::{Float, NumAssign, NumOps};
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash)]
-pub struct Angle<F: Float + FloatConst + NumAssign + NumOps>(F);
+pub struct Angle<F: Float + NumAssign + NumOps + AngleConst>(F);
 
-impl<F: Float + FloatConst + NumAssign + NumOps> Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> Angle<F> {
+    pub const DEG_0: Self = Self(F::DEG_0);
+    pub const DEG_30: Self = Self(F::DEG_30);
+    pub const DEG_45: Self = Self(F::DEG_45);
+    pub const DEG_60: Self = Self(F::DEG_60);
+    pub const DEG_90: Self = Self(F::DEG_90);
+    pub const DEG_120: Self = Self(F::DEG_120);
+    pub const DEG_135: Self = Self(F::DEG_135);
+    pub const DEG_150: Self = Self(F::DEG_150);
+    pub const DEG_180: Self = Self(F::DEG_180);
+
     fn normalize<A: Into<F> + Copy>(arg: A) -> F {
         let mut result: F = arg.into();
         if !result.is_nan() {
-            if result > F::PI() {
-                while result > F::PI() {
-                    result -= F::PI() * F::from(2.0).unwrap();
+            if result > F::DEG_180 {
+                while result > F::DEG_180 {
+                    result -= F::DEG_180 * F::from(2.0).unwrap();
                 }
-            } else if result < -F::PI() {
-                while result < -F::PI() {
-                    result += F::PI() * F::from(2.0).unwrap();
+            } else if result < -F::DEG_180 {
+                while result < -F::DEG_180 {
+                    result += F::DEG_180 * F::from(2.0).unwrap();
                 }
             }
         };
@@ -65,7 +75,7 @@ impl<F: Float + FloatConst + NumAssign + NumOps> Angle<F> {
     }
 
     pub fn opposite(self) -> Self {
-        (self.0 + F::PI()).into()
+        (self.0 + F::DEG_180).into()
     }
 
     pub fn cos(self) -> F {
@@ -81,13 +91,13 @@ impl<F: Float + FloatConst + NumAssign + NumOps> Angle<F> {
     }
 }
 
-impl<F: Float + FloatConst + NumAssign + NumOps> From<F> for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> From<F> for Angle<F> {
     fn from(f: F) -> Self {
         Self(Self::normalize(f))
     }
 }
 
-impl<F: Float + FloatConst + NumAssign + NumOps> Neg for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> Neg for Angle<F> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -95,7 +105,7 @@ impl<F: Float + FloatConst + NumAssign + NumOps> Neg for Angle<F> {
     }
 }
 
-impl<F: Float + FloatConst + NumAssign + NumOps> Add for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> Add for Angle<F> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -103,13 +113,13 @@ impl<F: Float + FloatConst + NumAssign + NumOps> Add for Angle<F> {
     }
 }
 
-impl<F: Float + FloatConst + NumAssign + NumOps> AddAssign for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> AddAssign for Angle<F> {
     fn add_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 + other.0)
     }
 }
 
-impl<F: Float + FloatConst + NumAssign + NumOps> Sub for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> Sub for Angle<F> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -117,7 +127,7 @@ impl<F: Float + FloatConst + NumAssign + NumOps> Sub for Angle<F> {
     }
 }
 
-impl<F: Float + FloatConst + NumAssign + NumOps> SubAssign for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> SubAssign for Angle<F> {
     fn sub_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 - other.0)
     }
@@ -125,7 +135,7 @@ impl<F: Float + FloatConst + NumAssign + NumOps> SubAssign for Angle<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating equality i.e. -PI and PI are the same angle.
-impl<F: Float + FloatConst + NumAssign + NumOps> PartialEq for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> PartialEq for Angle<F> {
     fn eq(&self, other: &Self) -> bool {
         if self.0.is_nan() {
             other.0.is_nan()
@@ -139,7 +149,7 @@ impl<F: Float + FloatConst + NumAssign + NumOps> PartialEq for Angle<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating order.
-impl<F: Float + FloatConst + NumAssign + NumOps> PartialOrd for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> PartialOrd for Angle<F> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.0.is_nan() {
             if other.0.is_nan() {
@@ -164,7 +174,7 @@ impl<F: Float + FloatConst + NumAssign + NumOps> PartialOrd for Angle<F> {
 
 impl<F, Scalar> Div<Scalar> for Angle<F>
 where
-    F: Float + FloatConst + NumAssign + NumOps,
+    F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
@@ -176,7 +186,7 @@ where
 
 impl<F, Scalar> DivAssign<Scalar> for Angle<F>
 where
-    F: Float + FloatConst + NumAssign + NumOps,
+    F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
 {
     fn div_assign(&mut self, rhs: Scalar) {
@@ -186,7 +196,7 @@ where
 
 impl<F, Scalar> Mul<Scalar> for Angle<F>
 where
-    F: Float + FloatConst + NumAssign + NumOps,
+    F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
@@ -198,7 +208,7 @@ where
 
 impl<F, Scalar> MulAssign<Scalar> for Angle<F>
 where
-    F: Float + FloatConst + NumAssign + NumOps,
+    F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
 {
     fn mul_assign(&mut self, rhs: Scalar) {
@@ -218,28 +228,28 @@ pub trait AngleConst {
     const DEG_180: Self;
 }
 
-impl AngleConst for Angle<f64> {
-    const DEG_0: Self = Self(0.0);
-    const DEG_30: Self = Self(std::f64::consts::FRAC_PI_6);
-    const DEG_45: Self = Self(std::f64::consts::FRAC_PI_4);
-    const DEG_60: Self = Self(std::f64::consts::FRAC_PI_3);
-    const DEG_90: Self = Self(std::f64::consts::FRAC_PI_2);
-    const DEG_120: Self = Self(std::f64::consts::FRAC_PI_3 * 2.0);
-    const DEG_135: Self = Self(std::f64::consts::FRAC_PI_4 * 3.0);
-    const DEG_150: Self = Self(std::f64::consts::FRAC_PI_6 * 5.0);
-    const DEG_180: Self = Self(std::f64::consts::PI);
+impl AngleConst for f32 {
+    const DEG_0: Self = 0.0;
+    const DEG_30: Self = std::f32::consts::FRAC_PI_6;
+    const DEG_45: Self = std::f32::consts::FRAC_PI_4;
+    const DEG_60: Self = std::f32::consts::FRAC_PI_3;
+    const DEG_90: Self = std::f32::consts::FRAC_PI_2;
+    const DEG_120: Self = std::f32::consts::FRAC_PI_3 * 2.0;
+    const DEG_135: Self = std::f32::consts::FRAC_PI_4 * 3.0;
+    const DEG_150: Self = std::f32::consts::FRAC_PI_6 * 5.0;
+    const DEG_180: Self = std::f32::consts::PI;
 }
 
-impl AngleConst for Angle<f32> {
-    const DEG_0: Self = Self(0.0);
-    const DEG_30: Self = Self(std::f32::consts::FRAC_PI_6);
-    const DEG_45: Self = Self(std::f32::consts::FRAC_PI_4);
-    const DEG_60: Self = Self(std::f32::consts::FRAC_PI_3);
-    const DEG_90: Self = Self(std::f32::consts::FRAC_PI_2);
-    const DEG_120: Self = Self(std::f32::consts::FRAC_PI_3 * 2.0);
-    const DEG_135: Self = Self(std::f32::consts::FRAC_PI_4 * 3.0);
-    const DEG_150: Self = Self(std::f32::consts::FRAC_PI_6 * 5.0);
-    const DEG_180: Self = Self(std::f32::consts::PI);
+impl AngleConst for f64 {
+    const DEG_0: Self = 0.0;
+    const DEG_30: Self = std::f64::consts::FRAC_PI_6;
+    const DEG_45: Self = std::f64::consts::FRAC_PI_4;
+    const DEG_60: Self = std::f64::consts::FRAC_PI_3;
+    const DEG_90: Self = std::f64::consts::FRAC_PI_2;
+    const DEG_120: Self = std::f64::consts::FRAC_PI_3 * 2.0;
+    const DEG_135: Self = std::f64::consts::FRAC_PI_4 * 3.0;
+    const DEG_150: Self = std::f64::consts::FRAC_PI_6 * 5.0;
+    const DEG_180: Self = std::f64::consts::PI;
 }
 
 #[cfg(test)]
