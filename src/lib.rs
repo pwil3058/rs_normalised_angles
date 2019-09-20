@@ -24,6 +24,14 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Angle<F> {
     pub const DEG_135: Self = Self(F::DEG_135);
     pub const DEG_150: Self = Self(F::DEG_150);
     pub const DEG_180: Self = Self(F::DEG_180);
+    pub const NEG_DEG_30: Self = Self(F::NEG_DEG_30);
+    pub const NEG_DEG_45: Self = Self(F::NEG_DEG_45);
+    pub const NEG_DEG_60: Self = Self(F::NEG_DEG_60);
+    pub const NEG_DEG_90: Self = Self(F::NEG_DEG_90);
+    pub const NEG_DEG_120: Self = Self(F::NEG_DEG_120);
+    pub const NEG_DEG_135: Self = Self(F::NEG_DEG_135);
+    pub const NEG_DEG_150: Self = Self(F::NEG_DEG_150);
+    pub const NEG_DEG_180: Self = Self(F::NEG_DEG_180);
 
     fn normalize<A: Into<F> + Copy>(arg: A) -> F {
         let mut result: F = arg.into();
@@ -226,6 +234,14 @@ pub trait AngleConst {
     const DEG_135: Self;
     const DEG_150: Self;
     const DEG_180: Self;
+    const NEG_DEG_30: Self;
+    const NEG_DEG_45: Self;
+    const NEG_DEG_60: Self;
+    const NEG_DEG_90: Self;
+    const NEG_DEG_120: Self;
+    const NEG_DEG_135: Self;
+    const NEG_DEG_150: Self;
+    const NEG_DEG_180: Self;
 }
 
 impl AngleConst for f32 {
@@ -238,6 +254,14 @@ impl AngleConst for f32 {
     const DEG_135: Self = std::f32::consts::FRAC_PI_4 * 3.0;
     const DEG_150: Self = std::f32::consts::FRAC_PI_6 * 5.0;
     const DEG_180: Self = std::f32::consts::PI;
+    const NEG_DEG_30: Self = -std::f32::consts::FRAC_PI_6;
+    const NEG_DEG_45: Self = -std::f32::consts::FRAC_PI_4;
+    const NEG_DEG_60: Self = -std::f32::consts::FRAC_PI_3;
+    const NEG_DEG_90: Self = -std::f32::consts::FRAC_PI_2;
+    const NEG_DEG_120: Self = -std::f32::consts::FRAC_PI_3 * 2.0;
+    const NEG_DEG_135: Self = -std::f32::consts::FRAC_PI_4 * 3.0;
+    const NEG_DEG_150: Self = -std::f32::consts::FRAC_PI_6 * 5.0;
+    const NEG_DEG_180: Self = -std::f32::consts::PI;
 }
 
 impl AngleConst for f64 {
@@ -250,6 +274,14 @@ impl AngleConst for f64 {
     const DEG_135: Self = std::f64::consts::FRAC_PI_4 * 3.0;
     const DEG_150: Self = std::f64::consts::FRAC_PI_6 * 5.0;
     const DEG_180: Self = std::f64::consts::PI;
+    const NEG_DEG_30: Self = -std::f64::consts::FRAC_PI_6;
+    const NEG_DEG_45: Self = -std::f64::consts::FRAC_PI_4;
+    const NEG_DEG_60: Self = -std::f64::consts::FRAC_PI_3;
+    const NEG_DEG_90: Self = -std::f64::consts::FRAC_PI_2;
+    const NEG_DEG_120: Self = -std::f64::consts::FRAC_PI_3 * 2.0;
+    const NEG_DEG_135: Self = -std::f64::consts::FRAC_PI_4 * 3.0;
+    const NEG_DEG_150: Self = -std::f64::consts::FRAC_PI_6 * 5.0;
+    const NEG_DEG_180: Self = -std::f64::consts::PI;
 }
 
 #[cfg(test)]
