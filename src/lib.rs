@@ -5,6 +5,7 @@
 #[macro_use]
 extern crate serde_derive;
 
+use float_cmp::ApproxEq;
 use num::traits::{Float, NumAssign, NumOps};
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
@@ -138,6 +139,29 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Sub for Angle<F> {
 impl<F: Float + NumAssign + NumOps + AngleConst> SubAssign for Angle<F> {
     fn sub_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 - other.0)
+    }
+}
+
+/// Takes into account the circular nature of angle values when
+/// evaluating equality i.e. -PI and PI are the same angle.
+impl<M, F> ApproxEq for Angle<F>
+where
+    M: Copy,
+    F: Float + NumAssign + NumOps + AngleConst + Copy + ApproxEq<Margin = M>,
+{
+    type Margin = M;
+
+    fn approx_eq<T: Into<Self::Margin>>(self, other: Self, margin: T) -> bool {
+        if self.0.is_nan() {
+            other.0.is_nan()
+        } else if other.0.is_nan() {
+            false
+        } else {
+            (self - other)
+                .0
+                .abs()
+                .approx_eq(F::from(0.0).unwrap(), margin)
+        }
     }
 }
 
@@ -288,6 +312,8 @@ impl AngleConst for f64 {
 mod tests {
     use super::*;
 
+    use float_cmp::approx_eq;
+
     #[test]
     fn normalize() {
         assert_eq!(
@@ -325,7 +351,7 @@ mod tests {
         );
         let mut angle = Angle::<f64>::from_degrees(15.0);
         angle -= Angle::<f64>::from_degrees(30.0);
-        assert_eq!(angle.degrees().round(), -15.0);
+        assert!(approx_eq!(f64, angle.degrees(), -15.0, ulps = 1));
     }
 
     #[test]
@@ -342,7 +368,7 @@ mod tests {
         );
         let mut angle = Angle::<f64>::from_degrees(15.0);
         angle /= 3.0;
-        assert_eq!(angle.degrees().round(), 5.0);
+        assert!(approx_eq!(f64, angle.degrees(), 5.0, ulps = 1));
     }
 
     #[test]
@@ -353,24 +379,16 @@ mod tests {
         );
         let mut angle = Angle::<f64>::from_degrees(15.0);
         angle *= 3.0;
-        assert_eq!(angle.degrees().round(), 45.0);
+        assert!(approx_eq!(f64, angle.degrees(), 45.0, ulps = 1));
     }
 
     #[test]
     fn opposite() {
-        assert_eq!(
-            Angle::<f64>::from_degrees(45.0)
-                .opposite()
-                .degrees()
-                .round(),
-            Angle::<f64>::from_degrees(-135.0).degrees().round()
-        );
-        assert_eq!(
-            Angle::<f64>::from_degrees(-60.0)
-                .opposite()
-                .degrees()
-                .round(),
-            Angle::<f64>::from_degrees(120.0).degrees().round()
-        );
+        assert!(Angle::<f64>::from_degrees(45.0)
+            .opposite()
+            .approx_eq(Angle::<f64>::from_degrees(-135.0), (0.0, 1)));
+        assert!(Angle::<f64>::from_degrees(-60.0)
+            .opposite()
+            .approx_eq(Angle::<f64>::from_degrees(120.0), (0.0000000000001, 0)));
     }
 }
