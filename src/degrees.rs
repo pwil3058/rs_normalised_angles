@@ -11,9 +11,6 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-pub mod degrees;
-pub mod radians;
-
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash)]
 pub struct Angle<F: Float + NumAssign + NumOps + AngleConst>(F);
 

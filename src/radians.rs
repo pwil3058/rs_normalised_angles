@@ -11,13 +11,10 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-pub mod degrees;
-pub mod radians;
-
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash)]
-pub struct Angle<F: Float + NumAssign + NumOps + AngleConst>(F);
+pub struct Radians<F: Float + NumAssign + NumOps + AngleConst>(F);
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> Radians<F> {
     pub const DEG_0: Self = Self(F::DEG_0);
     pub const DEG_30: Self = Self(F::DEG_30);
     pub const DEG_45: Self = Self(F::DEG_45);
@@ -116,19 +113,19 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Angle<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> From<F> for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> From<F> for Radians<F> {
     fn from(f: F) -> Self {
         Self(Self::normalize(f))
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> From<(F, F)> for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> From<(F, F)> for Radians<F> {
     fn from(xy: (F, F)) -> Self {
         Self::atan2(xy.0, xy.1)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Neg for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> Neg for Radians<F> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -136,7 +133,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Neg for Angle<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Add for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> Add for Radians<F> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -144,13 +141,13 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Add for Angle<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> AddAssign for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> AddAssign for Radians<F> {
     fn add_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 + other.0)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Sub for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> Sub for Radians<F> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -158,7 +155,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Sub for Angle<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> SubAssign for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> SubAssign for Radians<F> {
     fn sub_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 - other.0)
     }
@@ -166,7 +163,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> SubAssign for Angle<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating equality i.e. -PI and PI are the same angle.
-impl<F: Float + NumAssign + NumOps + AngleConst> PartialEq for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> PartialEq for Radians<F> {
     fn eq(&self, other: &Self) -> bool {
         if self.0.is_nan() {
             other.0.is_nan()
@@ -180,7 +177,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> PartialEq for Angle<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating order.
-impl<F: Float + NumAssign + NumOps + AngleConst> PartialOrd for Angle<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> PartialOrd for Radians<F> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.0.is_nan() {
             if other.0.is_nan() {
@@ -203,7 +200,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> PartialOrd for Angle<F> {
     }
 }
 
-impl<F, Scalar> Div<Scalar> for Angle<F>
+impl<F, Scalar> Div<Scalar> for Radians<F>
 where
     F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
@@ -211,11 +208,11 @@ where
     type Output = Self;
 
     fn div(self, rhs: Scalar) -> Self::Output {
-        Angle::from(self.0 / rhs.into())
+        Radians::from(self.0 / rhs.into())
     }
 }
 
-impl<F, Scalar> DivAssign<Scalar> for Angle<F>
+impl<F, Scalar> DivAssign<Scalar> for Radians<F>
 where
     F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
@@ -225,7 +222,7 @@ where
     }
 }
 
-impl<F, Scalar> Mul<Scalar> for Angle<F>
+impl<F, Scalar> Mul<Scalar> for Radians<F>
 where
     F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
@@ -233,11 +230,11 @@ where
     type Output = Self;
 
     fn mul(self, rhs: Scalar) -> Self::Output {
-        Angle::from(self.0 * rhs.into())
+        Radians::from(self.0 * rhs.into())
     }
 }
 
-impl<F, Scalar> MulAssign<Scalar> for Angle<F>
+impl<F, Scalar> MulAssign<Scalar> for Radians<F>
 where
     F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
@@ -320,78 +317,78 @@ mod tests {
     #[test]
     fn normalize() {
         assert_eq!(
-            Angle::<f64>::normalize(4.0),
+            Radians::<f64>::normalize(4.0),
             4.0_f64 - std::f64::consts::PI * 2.0
         );
     }
 
     #[test]
     fn atan2() {
-        assert!(Angle::<f64>::atan2(0.0, 0.0).is_nan());
-        assert!(!Angle::<f64>::atan2(0.0, 0.01).is_nan());
-        assert_eq!(Angle::<f64>::atan2(0.0, 0.01).degrees(), 90.0);
-        assert_eq!(Angle::<f64>::atan2(0.0, -0.1).degrees(), -90.0);
-        assert_eq!(Angle::<f64>::atan2(0.1, 0.1).degrees(), 45.0);
-        assert_eq!(Angle::<f64>::atan2(-0.1, 0.1).degrees(), 135.0);
+        assert!(Radians::<f64>::atan2(0.0, 0.0).is_nan());
+        assert!(!Radians::<f64>::atan2(0.0, 0.01).is_nan());
+        assert_eq!(Radians::<f64>::atan2(0.0, 0.01).degrees(), 90.0);
+        assert_eq!(Radians::<f64>::atan2(0.0, -0.1).degrees(), -90.0);
+        assert_eq!(Radians::<f64>::atan2(0.1, 0.1).degrees(), 45.0);
+        assert_eq!(Radians::<f64>::atan2(-0.1, 0.1).degrees(), 135.0);
     }
 
     #[test]
     fn addition() {
         assert_eq!(
-            Angle::<f64>::from_degrees(30.0) + Angle::<f64>::from_degrees(60.0),
-            Angle::<f64>::from_degrees(90.0)
+            Radians::<f64>::from_degrees(30.0) + Radians::<f64>::from_degrees(60.0),
+            Radians::<f64>::from_degrees(90.0)
         );
-        let mut angle = Angle::<f64>::from_degrees(15.0);
-        angle += Angle::<f64>::from_degrees(30.0);
+        let mut angle = Radians::<f64>::from_degrees(15.0);
+        angle += Radians::<f64>::from_degrees(30.0);
         assert_eq!(angle.degrees(), 45.0);
     }
 
     #[test]
     fn subtraction() {
         assert_eq!(
-            Angle::<f64>::from_degrees(30.0) - Angle::<f64>::from_degrees(60.0),
-            Angle::<f64>::from_degrees(-30.0)
+            Radians::<f64>::from_degrees(30.0) - Radians::<f64>::from_degrees(60.0),
+            Radians::<f64>::from_degrees(-30.0)
         );
-        let mut angle = Angle::<f64>::from_degrees(15.0);
-        angle -= Angle::<f64>::from_degrees(30.0);
-        assert!(angle.approx_eq(Angle::<f64>::from_degrees(-15.0)));
+        let mut angle = Radians::<f64>::from_degrees(15.0);
+        angle -= Radians::<f64>::from_degrees(30.0);
+        assert!(angle.approx_eq(Radians::<f64>::from_degrees(-15.0)));
     }
 
     #[test]
     fn compare() {
-        assert!(Angle::<f64>::from_degrees(-160.0) > Angle::<f64>::from_degrees(160.0));
-        assert!(Angle::<f64>::from_degrees(30.0) > Angle::<f64>::from_degrees(-30.0));
+        assert!(Radians::<f64>::from_degrees(-160.0) > Radians::<f64>::from_degrees(160.0));
+        assert!(Radians::<f64>::from_degrees(30.0) > Radians::<f64>::from_degrees(-30.0));
     }
 
     #[test]
     fn division() {
         assert_eq!(
-            Angle::<f64>::from_degrees(45.0) / 3.0,
-            Angle::<f64>::from_degrees(15.0)
+            Radians::<f64>::from_degrees(45.0) / 3.0,
+            Radians::<f64>::from_degrees(15.0)
         );
-        let mut angle = Angle::<f64>::from_degrees(15.0);
+        let mut angle = Radians::<f64>::from_degrees(15.0);
         angle /= 3.0;
-        assert!(angle.approx_eq(Angle::<f64>::from_degrees(5.0)));
+        assert!(angle.approx_eq(Radians::<f64>::from_degrees(5.0)));
     }
 
     #[test]
     fn multiplication() {
         assert_eq!(
-            Angle::<f64>::from_degrees(45.0) * 3.0,
-            Angle::<f64>::from_degrees(135.0)
+            Radians::<f64>::from_degrees(45.0) * 3.0,
+            Radians::<f64>::from_degrees(135.0)
         );
-        let mut angle = Angle::<f64>::from_degrees(15.0);
+        let mut angle = Radians::<f64>::from_degrees(15.0);
         angle *= 3.0;
-        assert!(angle.approx_eq(Angle::<f64>::from_degrees(45.0)));
+        assert!(angle.approx_eq(Radians::<f64>::from_degrees(45.0)));
     }
 
     #[test]
     fn opposite() {
-        assert!(Angle::<f64>::from_degrees(45.0)
+        assert!(Radians::<f64>::from_degrees(45.0)
             .opposite()
-            .approx_eq(Angle::<f64>::from_degrees(-135.0)));
-        assert!(Angle::<f64>::from_degrees(-60.0)
+            .approx_eq(Radians::<f64>::from_degrees(-135.0)));
+        assert!(Radians::<f64>::from_degrees(-60.0)
             .opposite()
-            .approx_eq(Angle::<f64>::from_degrees(120.0)));
+            .approx_eq(Radians::<f64>::from_degrees(120.0)));
     }
 }
