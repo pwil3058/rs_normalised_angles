@@ -1,10 +1,6 @@
 // Copyright 2019 Peter Williams <pwil3058@gmail.com> <pwil3058@bigpond.net.au>
-///! This crate provides floating point types that represent angles restricted to the confines
-///! of a circle (i.e. their value is guaranteed to be in the range -PI to +PI).
-
-#[macro_use]
-extern crate serde_derive;
-
+///! This module provides floating point types that represent angles (in radians) restricted to the
+///! confines of a circle (i.e. their value is guaranteed to be in the range -PI to +PI).
 use num::traits::{Float, NumAssign, NumOps};
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
@@ -12,9 +8,9 @@ use std::{
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash)]
-pub struct Radians<F: Float + NumAssign + NumOps + AngleConst>(F);
+pub struct Radians<F: Float + NumAssign + NumOps + RadiansConst>(F);
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Radians<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst> Radians<F> {
     pub const DEG_0: Self = Self(F::DEG_0);
     pub const DEG_30: Self = Self(F::DEG_30);
     pub const DEG_45: Self = Self(F::DEG_45);
@@ -113,19 +109,19 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Radians<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> From<F> for Radians<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst> From<F> for Radians<F> {
     fn from(f: F) -> Self {
         Self(Self::normalize(f))
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> From<(F, F)> for Radians<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst> From<(F, F)> for Radians<F> {
     fn from(xy: (F, F)) -> Self {
         Self::atan2(xy.0, xy.1)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Neg for Radians<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst> Neg for Radians<F> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -133,7 +129,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Neg for Radians<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Add for Radians<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst> Add for Radians<F> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -141,13 +137,13 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Add for Radians<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> AddAssign for Radians<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst> AddAssign for Radians<F> {
     fn add_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 + other.0)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Sub for Radians<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst> Sub for Radians<F> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -155,7 +151,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Sub for Radians<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> SubAssign for Radians<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst> SubAssign for Radians<F> {
     fn sub_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 - other.0)
     }
@@ -163,7 +159,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> SubAssign for Radians<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating equality i.e. -PI and PI are the same angle.
-impl<F: Float + NumAssign + NumOps + AngleConst> PartialEq for Radians<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst> PartialEq for Radians<F> {
     fn eq(&self, other: &Self) -> bool {
         if self.0.is_nan() {
             other.0.is_nan()
@@ -177,7 +173,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> PartialEq for Radians<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating order.
-impl<F: Float + NumAssign + NumOps + AngleConst> PartialOrd for Radians<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst> PartialOrd for Radians<F> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.0.is_nan() {
             if other.0.is_nan() {
@@ -202,7 +198,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> PartialOrd for Radians<F> {
 
 impl<F, Scalar> Div<Scalar> for Radians<F>
 where
-    F: Float + NumAssign + NumOps + AngleConst,
+    F: Float + NumAssign + NumOps + RadiansConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
@@ -214,7 +210,7 @@ where
 
 impl<F, Scalar> DivAssign<Scalar> for Radians<F>
 where
-    F: Float + NumAssign + NumOps + AngleConst,
+    F: Float + NumAssign + NumOps + RadiansConst,
     Scalar: Into<F> + Copy,
 {
     fn div_assign(&mut self, rhs: Scalar) {
@@ -224,7 +220,7 @@ where
 
 impl<F, Scalar> Mul<Scalar> for Radians<F>
 where
-    F: Float + NumAssign + NumOps + AngleConst,
+    F: Float + NumAssign + NumOps + RadiansConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
@@ -236,7 +232,7 @@ where
 
 impl<F, Scalar> MulAssign<Scalar> for Radians<F>
 where
-    F: Float + NumAssign + NumOps + AngleConst,
+    F: Float + NumAssign + NumOps + RadiansConst,
     Scalar: Into<F> + Copy,
 {
     fn mul_assign(&mut self, rhs: Scalar) {
@@ -244,7 +240,7 @@ where
     }
 }
 
-pub trait AngleConst {
+pub trait RadiansConst {
     const DEG_0: Self;
     const DEG_30: Self;
     const DEG_45: Self;
@@ -266,7 +262,7 @@ pub trait AngleConst {
     const APPROX_EQ_LIMIT: Self;
 }
 
-impl AngleConst for f32 {
+impl RadiansConst for f32 {
     const DEG_0: Self = 0.0;
     const DEG_30: Self = std::f32::consts::FRAC_PI_6;
     const DEG_45: Self = std::f32::consts::FRAC_PI_4;
@@ -288,7 +284,7 @@ impl AngleConst for f32 {
     const APPROX_EQ_LIMIT: Self = 0.000001;
 }
 
-impl AngleConst for f64 {
+impl RadiansConst for f64 {
     const DEG_0: Self = 0.0;
     const DEG_30: Self = std::f64::consts::FRAC_PI_6;
     const DEG_45: Self = std::f64::consts::FRAC_PI_4;

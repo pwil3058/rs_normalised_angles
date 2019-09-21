@@ -1,48 +1,27 @@
 // Copyright 2019 Peter Williams <pwil3058@gmail.com> <pwil3058@bigpond.net.au>
-///! This crate provides floating point types that represent angles restricted to the confines
-///! of a circle (i.e. their value is guaranteed to be in the range -PI to +PI).
-
-#[macro_use]
-extern crate serde_derive;
-
+///! This module provides floating point types that represent angles (in degrees) restricted to the
+///! confines of a circle (i.e. their value is guaranteed to be in the range -180 to +180).
 use num::traits::{Float, NumAssign, NumOps};
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash)]
-pub struct Angle<F: Float + NumAssign + NumOps + AngleConst>(F);
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, Default)]
+pub struct Degrees<F: Float + NumAssign + NumOps + DegConst>(F);
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Angle<F> {
-    pub const DEG_0: Self = Self(F::DEG_0);
-    pub const DEG_30: Self = Self(F::DEG_30);
-    pub const DEG_45: Self = Self(F::DEG_45);
-    pub const DEG_60: Self = Self(F::DEG_60);
-    pub const DEG_90: Self = Self(F::DEG_90);
-    pub const DEG_120: Self = Self(F::DEG_120);
-    pub const DEG_135: Self = Self(F::DEG_135);
-    pub const DEG_150: Self = Self(F::DEG_150);
-    pub const DEG_180: Self = Self(F::DEG_180);
-    pub const NEG_DEG_30: Self = Self(F::NEG_DEG_30);
-    pub const NEG_DEG_45: Self = Self(F::NEG_DEG_45);
-    pub const NEG_DEG_60: Self = Self(F::NEG_DEG_60);
-    pub const NEG_DEG_90: Self = Self(F::NEG_DEG_90);
-    pub const NEG_DEG_120: Self = Self(F::NEG_DEG_120);
-    pub const NEG_DEG_135: Self = Self(F::NEG_DEG_135);
-    pub const NEG_DEG_150: Self = Self(F::NEG_DEG_150);
-    pub const NEG_DEG_180: Self = Self(F::NEG_DEG_180);
-
+impl<F: Float + NumAssign + NumOps + DegConst> Degrees<F> {
     fn normalize<A: Into<F> + Copy>(arg: A) -> F {
         let mut result: F = arg.into();
         if !result.is_nan() {
-            if result > F::DEG_180 {
-                while result > F::DEG_180 {
-                    result -= F::DEG_180 * F::from(2.0).unwrap();
+            let half_circle = F::from(180.0).unwrap();
+            if result > half_circle {
+                while result > half_circle {
+                    result -= F::from(360.0).unwrap();
                 }
-            } else if result < -F::DEG_180 {
-                while result < -F::DEG_180 {
-                    result += F::DEG_180 * F::from(2.0).unwrap();
+            } else if result < -half_circle {
+                while result < -half_circle {
+                    result += F::from(360.0).unwrap();
                 }
             }
         };
@@ -54,7 +33,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Angle<F> {
         if x == zero && y == zero {
             Self(F::nan())
         } else {
-            Self(y.atan2(x))
+            Self(y.atan2(x).to_degrees())
         }
     }
 
@@ -62,40 +41,32 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Angle<F> {
         Self(self.0.abs())
     }
 
-    pub fn from_radians(f: F) -> Self {
-        f.into()
-    }
-
-    pub fn from_degrees(f: F) -> Self {
-        f.to_radians().into()
-    }
-
     pub fn is_nan(self) -> bool {
         self.0.is_nan()
     }
 
     pub fn radians(self) -> F {
-        self.0
+        self.0.to_radians()
     }
 
     pub fn degrees(self) -> F {
-        self.0.to_degrees()
+        self.0
     }
 
     pub fn opposite(self) -> Self {
-        (self.0 + F::DEG_180).into()
+        (self.0 + F::from(180.0).unwrap()).into()
     }
 
     pub fn cos(self) -> F {
-        self.0.cos()
+        self.0.to_radians().cos()
     }
 
     pub fn sin(self) -> F {
-        self.0.sin()
+        self.0.to_radians().sin()
     }
 
     pub fn tan(self) -> F {
-        self.0.tan()
+        self.0.to_radians().tan()
     }
 
     /// For use during testing where limitations of float representation of real numbers
@@ -113,19 +84,19 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Angle<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> From<F> for Angle<F> {
+impl<F: Float + NumAssign + NumOps + DegConst> From<F> for Degrees<F> {
     fn from(f: F) -> Self {
         Self(Self::normalize(f))
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> From<(F, F)> for Angle<F> {
+impl<F: Float + NumAssign + NumOps + DegConst> From<(F, F)> for Degrees<F> {
     fn from(xy: (F, F)) -> Self {
         Self::atan2(xy.0, xy.1)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Neg for Angle<F> {
+impl<F: Float + NumAssign + NumOps + DegConst> Neg for Degrees<F> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -133,7 +104,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Neg for Angle<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Add for Angle<F> {
+impl<F: Float + NumAssign + NumOps + DegConst> Add for Degrees<F> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -141,13 +112,13 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Add for Angle<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> AddAssign for Angle<F> {
+impl<F: Float + NumAssign + NumOps + DegConst> AddAssign for Degrees<F> {
     fn add_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 + other.0)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> Sub for Angle<F> {
+impl<F: Float + NumAssign + NumOps + DegConst> Sub for Degrees<F> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -155,7 +126,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Sub for Angle<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + AngleConst> SubAssign for Angle<F> {
+impl<F: Float + NumAssign + NumOps + DegConst> SubAssign for Degrees<F> {
     fn sub_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 - other.0)
     }
@@ -163,7 +134,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> SubAssign for Angle<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating equality i.e. -PI and PI are the same angle.
-impl<F: Float + NumAssign + NumOps + AngleConst> PartialEq for Angle<F> {
+impl<F: Float + NumAssign + NumOps + DegConst> PartialEq for Degrees<F> {
     fn eq(&self, other: &Self) -> bool {
         if self.0.is_nan() {
             other.0.is_nan()
@@ -177,7 +148,7 @@ impl<F: Float + NumAssign + NumOps + AngleConst> PartialEq for Angle<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating order.
-impl<F: Float + NumAssign + NumOps + AngleConst> PartialOrd for Angle<F> {
+impl<F: Float + NumAssign + NumOps + DegConst> PartialOrd for Degrees<F> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.0.is_nan() {
             if other.0.is_nan() {
@@ -200,21 +171,21 @@ impl<F: Float + NumAssign + NumOps + AngleConst> PartialOrd for Angle<F> {
     }
 }
 
-impl<F, Scalar> Div<Scalar> for Angle<F>
+impl<F, Scalar> Div<Scalar> for Degrees<F>
 where
-    F: Float + NumAssign + NumOps + AngleConst,
+    F: Float + NumAssign + NumOps + DegConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
 
     fn div(self, rhs: Scalar) -> Self::Output {
-        Angle::from(self.0 / rhs.into())
+        Degrees::from(self.0 / rhs.into())
     }
 }
 
-impl<F, Scalar> DivAssign<Scalar> for Angle<F>
+impl<F, Scalar> DivAssign<Scalar> for Degrees<F>
 where
-    F: Float + NumAssign + NumOps + AngleConst,
+    F: Float + NumAssign + NumOps + DegConst,
     Scalar: Into<F> + Copy,
 {
     fn div_assign(&mut self, rhs: Scalar) {
@@ -222,21 +193,21 @@ where
     }
 }
 
-impl<F, Scalar> Mul<Scalar> for Angle<F>
+impl<F, Scalar> Mul<Scalar> for Degrees<F>
 where
-    F: Float + NumAssign + NumOps + AngleConst,
+    F: Float + NumAssign + NumOps + DegConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
 
     fn mul(self, rhs: Scalar) -> Self::Output {
-        Angle::from(self.0 * rhs.into())
+        Degrees::from(self.0 * rhs.into())
     }
 }
 
-impl<F, Scalar> MulAssign<Scalar> for Angle<F>
+impl<F, Scalar> MulAssign<Scalar> for Degrees<F>
 where
-    F: Float + NumAssign + NumOps + AngleConst,
+    F: Float + NumAssign + NumOps + DegConst,
     Scalar: Into<F> + Copy,
 {
     fn mul_assign(&mut self, rhs: Scalar) {
@@ -244,69 +215,15 @@ where
     }
 }
 
-pub trait AngleConst {
-    const DEG_0: Self;
-    const DEG_30: Self;
-    const DEG_45: Self;
-    const DEG_60: Self;
-    const DEG_90: Self;
-    const DEG_120: Self;
-    const DEG_135: Self;
-    const DEG_150: Self;
-    const DEG_180: Self;
-    const NEG_DEG_30: Self;
-    const NEG_DEG_45: Self;
-    const NEG_DEG_60: Self;
-    const NEG_DEG_90: Self;
-    const NEG_DEG_120: Self;
-    const NEG_DEG_135: Self;
-    const NEG_DEG_150: Self;
-    const NEG_DEG_180: Self;
-
+pub trait DegConst {
     const APPROX_EQ_LIMIT: Self;
 }
 
-impl AngleConst for f32 {
-    const DEG_0: Self = 0.0;
-    const DEG_30: Self = std::f32::consts::FRAC_PI_6;
-    const DEG_45: Self = std::f32::consts::FRAC_PI_4;
-    const DEG_60: Self = std::f32::consts::FRAC_PI_3;
-    const DEG_90: Self = std::f32::consts::FRAC_PI_2;
-    const DEG_120: Self = std::f32::consts::FRAC_PI_3 * 2.0;
-    const DEG_135: Self = std::f32::consts::FRAC_PI_4 * 3.0;
-    const DEG_150: Self = std::f32::consts::FRAC_PI_6 * 5.0;
-    const DEG_180: Self = std::f32::consts::PI;
-    const NEG_DEG_30: Self = -std::f32::consts::FRAC_PI_6;
-    const NEG_DEG_45: Self = -std::f32::consts::FRAC_PI_4;
-    const NEG_DEG_60: Self = -std::f32::consts::FRAC_PI_3;
-    const NEG_DEG_90: Self = -std::f32::consts::FRAC_PI_2;
-    const NEG_DEG_120: Self = -std::f32::consts::FRAC_PI_3 * 2.0;
-    const NEG_DEG_135: Self = -std::f32::consts::FRAC_PI_4 * 3.0;
-    const NEG_DEG_150: Self = -std::f32::consts::FRAC_PI_6 * 5.0;
-    const NEG_DEG_180: Self = -std::f32::consts::PI;
-
+impl DegConst for f32 {
     const APPROX_EQ_LIMIT: Self = 0.000001;
 }
 
-impl AngleConst for f64 {
-    const DEG_0: Self = 0.0;
-    const DEG_30: Self = std::f64::consts::FRAC_PI_6;
-    const DEG_45: Self = std::f64::consts::FRAC_PI_4;
-    const DEG_60: Self = std::f64::consts::FRAC_PI_3;
-    const DEG_90: Self = std::f64::consts::FRAC_PI_2;
-    const DEG_120: Self = std::f64::consts::FRAC_PI_3 * 2.0;
-    const DEG_135: Self = std::f64::consts::FRAC_PI_4 * 3.0;
-    const DEG_150: Self = std::f64::consts::FRAC_PI_6 * 5.0;
-    const DEG_180: Self = std::f64::consts::PI;
-    const NEG_DEG_30: Self = -std::f64::consts::FRAC_PI_6;
-    const NEG_DEG_45: Self = -std::f64::consts::FRAC_PI_4;
-    const NEG_DEG_60: Self = -std::f64::consts::FRAC_PI_3;
-    const NEG_DEG_90: Self = -std::f64::consts::FRAC_PI_2;
-    const NEG_DEG_120: Self = -std::f64::consts::FRAC_PI_3 * 2.0;
-    const NEG_DEG_135: Self = -std::f64::consts::FRAC_PI_4 * 3.0;
-    const NEG_DEG_150: Self = -std::f64::consts::FRAC_PI_6 * 5.0;
-    const NEG_DEG_180: Self = -std::f64::consts::PI;
-
+impl DegConst for f64 {
     const APPROX_EQ_LIMIT: Self = 0.0000000001;
 }
 
@@ -315,80 +232,82 @@ mod tests {
     use super::*;
 
     #[test]
+    fn default() {
+        assert_eq!(Degrees::<f32>::default().degrees(), 0.0);
+        assert_eq!(Degrees::<f64>::default().degrees(), 0.0);
+    }
+
+    #[test]
     fn normalize() {
-        assert_eq!(
-            Angle::<f64>::normalize(4.0),
-            4.0_f64 - std::f64::consts::PI * 2.0
-        );
+        assert_eq!(Degrees::<f64>::normalize(270.0), -90.0);
+        assert_eq!(Degrees::<f64>::normalize(320.0), -40.0);
+        assert_eq!(Degrees::<f64>::normalize(400.0), 40.0);
     }
 
     #[test]
     fn atan2() {
-        assert!(Angle::<f64>::atan2(0.0, 0.0).is_nan());
-        assert!(!Angle::<f64>::atan2(0.0, 0.01).is_nan());
-        assert_eq!(Angle::<f64>::atan2(0.0, 0.01).degrees(), 90.0);
-        assert_eq!(Angle::<f64>::atan2(0.0, -0.1).degrees(), -90.0);
-        assert_eq!(Angle::<f64>::atan2(0.1, 0.1).degrees(), 45.0);
-        assert_eq!(Angle::<f64>::atan2(-0.1, 0.1).degrees(), 135.0);
+        assert!(Degrees::<f64>::atan2(0.0, 0.0).is_nan());
+        assert!(!Degrees::<f64>::atan2(0.0, 0.01).is_nan());
+        assert_eq!(Degrees::<f64>::atan2(0.0, 0.01).degrees(), 90.0);
+        assert_eq!(Degrees::<f64>::atan2(0.0, -0.1).degrees(), -90.0);
+        assert_eq!(Degrees::<f64>::atan2(0.1, 0.1).degrees(), 45.0);
+        assert_eq!(Degrees::<f64>::atan2(-0.1, 0.1).degrees(), 135.0);
     }
 
     #[test]
     fn addition() {
         assert_eq!(
-            Angle::<f64>::from_degrees(30.0) + Angle::<f64>::from_degrees(60.0),
-            Angle::<f64>::from_degrees(90.0)
+            Degrees::<f64>::from(30.0) + Degrees::<f64>::from(60.0),
+            Degrees::<f64>::from(90.0)
         );
-        let mut angle = Angle::<f64>::from_degrees(15.0);
-        angle += Angle::<f64>::from_degrees(30.0);
+        let mut angle = Degrees::<f64>::from(15.0);
+        angle += Degrees::<f64>::from(30.0);
         assert_eq!(angle.degrees(), 45.0);
     }
 
     #[test]
     fn subtraction() {
         assert_eq!(
-            Angle::<f64>::from_degrees(30.0) - Angle::<f64>::from_degrees(60.0),
-            Angle::<f64>::from_degrees(-30.0)
+            Degrees::<f64>::from(30.0) - Degrees::<f64>::from(60.0),
+            Degrees::<f64>::from(-30.0)
         );
-        let mut angle = Angle::<f64>::from_degrees(15.0);
-        angle -= Angle::<f64>::from_degrees(30.0);
-        assert!(angle.approx_eq(Angle::<f64>::from_degrees(-15.0)));
+        let mut angle = Degrees::<f64>::from(15.0);
+        angle -= Degrees::<f64>::from(30.0);
+        assert!(angle.approx_eq(Degrees::<f64>::from(-15.0)));
     }
 
     #[test]
     fn compare() {
-        assert!(Angle::<f64>::from_degrees(-160.0) > Angle::<f64>::from_degrees(160.0));
-        assert!(Angle::<f64>::from_degrees(30.0) > Angle::<f64>::from_degrees(-30.0));
+        assert!(Degrees::<f64>::from(-160.0) > Degrees::<f64>::from(160.0));
+        assert!(Degrees::<f64>::from(30.0) > Degrees::<f64>::from(-30.0));
     }
 
     #[test]
     fn division() {
-        assert_eq!(
-            Angle::<f64>::from_degrees(45.0) / 3.0,
-            Angle::<f64>::from_degrees(15.0)
-        );
-        let mut angle = Angle::<f64>::from_degrees(15.0);
+        assert_eq!(Degrees::<f64>::from(45.0) / 3.0, Degrees::<f64>::from(15.0));
+        let mut angle = Degrees::<f64>::from(15.0);
         angle /= 3.0;
-        assert!(angle.approx_eq(Angle::<f64>::from_degrees(5.0)));
+        assert!(angle.approx_eq(Degrees::<f64>::from(5.0)));
     }
 
     #[test]
     fn multiplication() {
         assert_eq!(
-            Angle::<f64>::from_degrees(45.0) * 3.0,
-            Angle::<f64>::from_degrees(135.0)
+            Degrees::<f64>::from(45.0) * 3.0,
+            Degrees::<f64>::from(135.0)
         );
-        let mut angle = Angle::<f64>::from_degrees(15.0);
+        let mut angle = Degrees::<f64>::from(15.0);
         angle *= 3.0;
-        assert!(angle.approx_eq(Angle::<f64>::from_degrees(45.0)));
+        assert!(angle.approx_eq(Degrees::<f64>::from(45.0)));
     }
 
     #[test]
     fn opposite() {
-        assert!(Angle::<f64>::from_degrees(45.0)
+        assert!(Degrees::<f64>::from(45.0)
             .opposite()
-            .approx_eq(Angle::<f64>::from_degrees(-135.0)));
-        assert!(Angle::<f64>::from_degrees(-60.0)
+            .approx_eq(Degrees::<f64>::from(-135.0)));
+        assert!(Degrees::<f64>::from(-60.0)
             .opposite()
-            .approx_eq(Angle::<f64>::from_degrees(120.0)));
+            .approx_eq(Degrees::<f64>::from(120.0)));
     }
 }

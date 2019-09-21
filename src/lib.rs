@@ -14,6 +14,9 @@ use std::{
 pub mod degrees;
 pub mod radians;
 
+pub use crate::degrees::*;
+pub use crate::radians::*;
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash)]
 pub struct Angle<F: Float + NumAssign + NumOps + AngleConst>(F);
 
