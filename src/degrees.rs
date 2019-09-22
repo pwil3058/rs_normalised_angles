@@ -7,10 +7,12 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, Default)]
-pub struct Degrees<F: Float + NumAssign + NumOps + DegConst>(F);
+use crate::{radians::Radians, AngleConst, RadiansConst};
 
-impl<F: Float + NumAssign + NumOps + DegConst> Degrees<F> {
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, Default)]
+pub struct Degrees<F: Float + NumAssign + NumOps + AngleConst>(F);
+
+impl<F: Float + NumAssign + NumOps + AngleConst> Degrees<F> {
     fn normalize<A: Into<F> + Copy>(arg: A) -> F {
         let mut result: F = arg.into();
         if !result.is_nan() {
@@ -77,26 +79,32 @@ impl<F: Float + NumAssign + NumOps + DegConst> Degrees<F> {
         } else if other.0.is_nan() {
             false
         } else if self.0 == F::from(0.0).unwrap() || other.0 == F::from(0.0).unwrap() {
-            (self.0 + other.0).abs() < F::APPROX_EQ_LIMIT
+            (self.0 + other.0).abs() < F::ANGLE_APPROX_EQ_LIMIT
         } else {
-            ((self - other).0 / self.0).abs() < F::APPROX_EQ_LIMIT
+            ((self - other).0 / self.0).abs() < F::ANGLE_APPROX_EQ_LIMIT
         }
     }
 }
 
-impl<F: Float + NumAssign + NumOps + DegConst> From<F> for Degrees<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> From<F> for Degrees<F> {
     fn from(f: F) -> Self {
         Self(Self::normalize(f))
     }
 }
 
-impl<F: Float + NumAssign + NumOps + DegConst> From<(F, F)> for Degrees<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> From<(F, F)> for Degrees<F> {
     fn from(xy: (F, F)) -> Self {
         Self::atan2(xy.0, xy.1)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + DegConst> Neg for Degrees<F> {
+impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> From<Radians<F>> for Degrees<F> {
+    fn from(radians: Radians<F>) -> Self {
+        Self(radians.degrees())
+    }
+}
+
+impl<F: Float + NumAssign + NumOps + AngleConst> Neg for Degrees<F> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -104,7 +112,7 @@ impl<F: Float + NumAssign + NumOps + DegConst> Neg for Degrees<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + DegConst> Add for Degrees<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> Add for Degrees<F> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -112,13 +120,13 @@ impl<F: Float + NumAssign + NumOps + DegConst> Add for Degrees<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + DegConst> AddAssign for Degrees<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> AddAssign for Degrees<F> {
     fn add_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 + other.0)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + DegConst> Sub for Degrees<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> Sub for Degrees<F> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -126,7 +134,7 @@ impl<F: Float + NumAssign + NumOps + DegConst> Sub for Degrees<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + DegConst> SubAssign for Degrees<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> SubAssign for Degrees<F> {
     fn sub_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 - other.0)
     }
@@ -134,7 +142,7 @@ impl<F: Float + NumAssign + NumOps + DegConst> SubAssign for Degrees<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating equality i.e. -PI and PI are the same angle.
-impl<F: Float + NumAssign + NumOps + DegConst> PartialEq for Degrees<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> PartialEq for Degrees<F> {
     fn eq(&self, other: &Self) -> bool {
         if self.0.is_nan() {
             other.0.is_nan()
@@ -148,7 +156,7 @@ impl<F: Float + NumAssign + NumOps + DegConst> PartialEq for Degrees<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating order.
-impl<F: Float + NumAssign + NumOps + DegConst> PartialOrd for Degrees<F> {
+impl<F: Float + NumAssign + NumOps + AngleConst> PartialOrd for Degrees<F> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.0.is_nan() {
             if other.0.is_nan() {
@@ -173,7 +181,7 @@ impl<F: Float + NumAssign + NumOps + DegConst> PartialOrd for Degrees<F> {
 
 impl<F, Scalar> Div<Scalar> for Degrees<F>
 where
-    F: Float + NumAssign + NumOps + DegConst,
+    F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
@@ -185,7 +193,7 @@ where
 
 impl<F, Scalar> DivAssign<Scalar> for Degrees<F>
 where
-    F: Float + NumAssign + NumOps + DegConst,
+    F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
 {
     fn div_assign(&mut self, rhs: Scalar) {
@@ -195,7 +203,7 @@ where
 
 impl<F, Scalar> Mul<Scalar> for Degrees<F>
 where
-    F: Float + NumAssign + NumOps + DegConst,
+    F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
@@ -207,24 +215,12 @@ where
 
 impl<F, Scalar> MulAssign<Scalar> for Degrees<F>
 where
-    F: Float + NumAssign + NumOps + DegConst,
+    F: Float + NumAssign + NumOps + AngleConst,
     Scalar: Into<F> + Copy,
 {
     fn mul_assign(&mut self, rhs: Scalar) {
         self.0 = Self::normalize(self.0 * rhs.into())
     }
-}
-
-pub trait DegConst {
-    const APPROX_EQ_LIMIT: Self;
-}
-
-impl DegConst for f32 {
-    const APPROX_EQ_LIMIT: Self = 0.000001;
-}
-
-impl DegConst for f64 {
-    const APPROX_EQ_LIMIT: Self = 0.0000000001;
 }
 
 #[cfg(test)]
@@ -235,6 +231,11 @@ mod tests {
     fn default() {
         assert_eq!(Degrees::<f32>::default().degrees(), 0.0);
         assert_eq!(Degrees::<f64>::default().degrees(), 0.0);
+    }
+
+    #[test]
+    fn radians() {
+        assert!(Degrees::<f64>::from(-150.0).approx_eq(Radians::NEG_DEG_150.into()));
     }
 
     #[test]

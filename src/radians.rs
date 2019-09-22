@@ -7,6 +7,8 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
+use crate::{degrees::Degrees, RadiansConst};
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash)]
 pub struct Radians<F: Float + NumAssign + NumOps + RadiansConst>(F);
 
@@ -102,9 +104,9 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> Radians<F> {
         } else if other.0.is_nan() {
             false
         } else if self.0 == F::from(0.0).unwrap() || other.0 == F::from(0.0).unwrap() {
-            (self.0 + other.0).abs() < F::APPROX_EQ_LIMIT
+            (self.0 + other.0).abs() < F::ANGLE_APPROX_EQ_LIMIT
         } else {
-            ((self - other).0 / self.0).abs() < F::APPROX_EQ_LIMIT
+            ((self - other).0 / self.0).abs() < F::ANGLE_APPROX_EQ_LIMIT
         }
     }
 }
@@ -118,6 +120,12 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> From<F> for Radians<F> {
 impl<F: Float + NumAssign + NumOps + RadiansConst> From<(F, F)> for Radians<F> {
     fn from(xy: (F, F)) -> Self {
         Self::atan2(xy.0, xy.1)
+    }
+}
+
+impl<F: Float + NumAssign + NumOps + RadiansConst> From<Degrees<F>> for Radians<F> {
+    fn from(degrees: Degrees<F>) -> Self {
+        Self(degrees.radians())
     }
 }
 
@@ -240,72 +248,6 @@ where
     }
 }
 
-pub trait RadiansConst {
-    const DEG_0: Self;
-    const DEG_30: Self;
-    const DEG_45: Self;
-    const DEG_60: Self;
-    const DEG_90: Self;
-    const DEG_120: Self;
-    const DEG_135: Self;
-    const DEG_150: Self;
-    const DEG_180: Self;
-    const NEG_DEG_30: Self;
-    const NEG_DEG_45: Self;
-    const NEG_DEG_60: Self;
-    const NEG_DEG_90: Self;
-    const NEG_DEG_120: Self;
-    const NEG_DEG_135: Self;
-    const NEG_DEG_150: Self;
-    const NEG_DEG_180: Self;
-
-    const APPROX_EQ_LIMIT: Self;
-}
-
-impl RadiansConst for f32 {
-    const DEG_0: Self = 0.0;
-    const DEG_30: Self = std::f32::consts::FRAC_PI_6;
-    const DEG_45: Self = std::f32::consts::FRAC_PI_4;
-    const DEG_60: Self = std::f32::consts::FRAC_PI_3;
-    const DEG_90: Self = std::f32::consts::FRAC_PI_2;
-    const DEG_120: Self = std::f32::consts::FRAC_PI_3 * 2.0;
-    const DEG_135: Self = std::f32::consts::FRAC_PI_4 * 3.0;
-    const DEG_150: Self = std::f32::consts::FRAC_PI_6 * 5.0;
-    const DEG_180: Self = std::f32::consts::PI;
-    const NEG_DEG_30: Self = -std::f32::consts::FRAC_PI_6;
-    const NEG_DEG_45: Self = -std::f32::consts::FRAC_PI_4;
-    const NEG_DEG_60: Self = -std::f32::consts::FRAC_PI_3;
-    const NEG_DEG_90: Self = -std::f32::consts::FRAC_PI_2;
-    const NEG_DEG_120: Self = -std::f32::consts::FRAC_PI_3 * 2.0;
-    const NEG_DEG_135: Self = -std::f32::consts::FRAC_PI_4 * 3.0;
-    const NEG_DEG_150: Self = -std::f32::consts::FRAC_PI_6 * 5.0;
-    const NEG_DEG_180: Self = -std::f32::consts::PI;
-
-    const APPROX_EQ_LIMIT: Self = 0.000001;
-}
-
-impl RadiansConst for f64 {
-    const DEG_0: Self = 0.0;
-    const DEG_30: Self = std::f64::consts::FRAC_PI_6;
-    const DEG_45: Self = std::f64::consts::FRAC_PI_4;
-    const DEG_60: Self = std::f64::consts::FRAC_PI_3;
-    const DEG_90: Self = std::f64::consts::FRAC_PI_2;
-    const DEG_120: Self = std::f64::consts::FRAC_PI_3 * 2.0;
-    const DEG_135: Self = std::f64::consts::FRAC_PI_4 * 3.0;
-    const DEG_150: Self = std::f64::consts::FRAC_PI_6 * 5.0;
-    const DEG_180: Self = std::f64::consts::PI;
-    const NEG_DEG_30: Self = -std::f64::consts::FRAC_PI_6;
-    const NEG_DEG_45: Self = -std::f64::consts::FRAC_PI_4;
-    const NEG_DEG_60: Self = -std::f64::consts::FRAC_PI_3;
-    const NEG_DEG_90: Self = -std::f64::consts::FRAC_PI_2;
-    const NEG_DEG_120: Self = -std::f64::consts::FRAC_PI_3 * 2.0;
-    const NEG_DEG_135: Self = -std::f64::consts::FRAC_PI_4 * 3.0;
-    const NEG_DEG_150: Self = -std::f64::consts::FRAC_PI_6 * 5.0;
-    const NEG_DEG_180: Self = -std::f64::consts::PI;
-
-    const APPROX_EQ_LIMIT: Self = 0.0000000001;
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -316,6 +258,11 @@ mod tests {
             Radians::<f64>::normalize(4.0),
             4.0_f64 - std::f64::consts::PI * 2.0
         );
+    }
+
+    #[test]
+    fn degrees() {
+        assert!(Radians::<f64>::NEG_DEG_150.approx_eq(Degrees::from(-150.0).into()));
     }
 
     #[test]
