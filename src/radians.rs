@@ -96,6 +96,14 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> Radians<F> {
         self.0.tan()
     }
 
+    pub fn xy(self) -> (F, F) {
+        if self.0.is_nan() {
+            (F::from(0.0).unwrap(), F::from(0.0).unwrap())
+        } else {
+            (self.0.to_radians().cos(), self.0.to_radians().sin())
+        }
+    }
+
     /// For use during testing where limitations of float representation of real numbers
     /// means exact equivalence is unrealistic.
     pub fn approx_eq(self, other: Self) -> bool {
