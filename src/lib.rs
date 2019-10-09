@@ -96,6 +96,67 @@ impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> Angle<F> {
     }
 }
 
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+
+impl<F: Float + NumAssign + NumOps + RadiansConst + AbsDiffEq> AbsDiffEq for Angle<F> {
+    type Epsilon = F::Epsilon;
+
+    fn default_epsilon() -> F::Epsilon {
+        F::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: F::Epsilon) -> bool {
+        match self {
+            Angle::Degrees(degrees) => match other {
+                Angle::Degrees(other) => degrees.abs_diff_eq(other, epsilon),
+                Angle::Radians(other) => degrees.abs_diff_eq(&other.into(), epsilon),
+            },
+            Angle::Radians(radians) => match other {
+                Angle::Degrees(other) => radians.abs_diff_eq(&other.into(), epsilon),
+                Angle::Radians(other) => radians.abs_diff_eq(other, epsilon),
+            },
+        }
+    }
+}
+
+impl<F: Float + NumAssign + NumOps + RadiansConst + UlpsEq> UlpsEq for Angle<F> {
+    fn default_max_ulps() -> u32 {
+        F::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: F::Epsilon, max_ulps: u32) -> bool {
+        match self {
+            Angle::Degrees(degrees) => match other {
+                Angle::Degrees(other) => degrees.ulps_eq(other, epsilon, max_ulps),
+                Angle::Radians(other) => degrees.ulps_eq(&other.into(), epsilon, max_ulps),
+            },
+            Angle::Radians(radians) => match other {
+                Angle::Degrees(other) => radians.ulps_eq(&other.into(), epsilon, max_ulps),
+                Angle::Radians(other) => radians.ulps_eq(other, epsilon, max_ulps),
+            },
+        }
+    }
+}
+
+impl<F: Float + NumAssign + NumOps + RadiansConst + RelativeEq> RelativeEq for Angle<F> {
+    fn default_max_relative() -> F::Epsilon {
+        F::default_max_relative()
+    }
+
+    fn relative_eq(&self, other: &Self, epsilon: F::Epsilon, max_relative: F::Epsilon) -> bool {
+        match self {
+            Angle::Degrees(degrees) => match other {
+                Angle::Degrees(other) => degrees.relative_eq(other, epsilon, max_relative),
+                Angle::Radians(other) => degrees.relative_eq(&other.into(), epsilon, max_relative),
+            },
+            Angle::Radians(radians) => match other {
+                Angle::Degrees(other) => radians.relative_eq(&other.into(), epsilon, max_relative),
+                Angle::Radians(other) => radians.relative_eq(other, epsilon, max_relative),
+            },
+        }
+    }
+}
+
 impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> From<Radians<F>> for Angle<F> {
     fn from(radians: Radians<F>) -> Self {
         Angle::Radians(radians)

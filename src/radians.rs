@@ -171,6 +171,12 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> From<Degrees<F>> for Radians<
     }
 }
 
+impl<F: Float + NumAssign + NumOps + RadiansConst> From<&Degrees<F>> for Radians<F> {
+    fn from(degrees: &Degrees<F>) -> Self {
+        Self(degrees.radians())
+    }
+}
+
 impl<F: Float + NumAssign + NumOps + RadiansConst> Neg for Radians<F> {
     type Output = Self;
 
