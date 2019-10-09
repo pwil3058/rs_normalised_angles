@@ -94,6 +94,40 @@ impl<F: Float + NumAssign + NumOps + AngleConst> Degrees<F> {
     }
 }
 
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+
+impl<F: Float + NumAssign + NumOps + AngleConst + AbsDiffEq> AbsDiffEq for Degrees<F> {
+    type Epsilon = F::Epsilon;
+
+    fn default_epsilon() -> F::Epsilon {
+        F::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: F::Epsilon) -> bool {
+        F::abs_diff_eq(&self.0, &other.0, epsilon)
+    }
+}
+
+impl<F: Float + NumAssign + NumOps + AngleConst + UlpsEq> UlpsEq for Degrees<F> {
+    fn default_max_ulps() -> u32 {
+        F::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: F::Epsilon, max_ulps: u32) -> bool {
+        F::ulps_eq(&self.0, &other.0, epsilon, max_ulps)
+    }
+}
+
+impl<F: Float + NumAssign + NumOps + AngleConst + RelativeEq> RelativeEq for Degrees<F> {
+    fn default_max_relative() -> F::Epsilon {
+        F::default_max_relative()
+    }
+
+    fn relative_eq(&self, other: &Self, epsilon: F::Epsilon, max_relative: F::Epsilon) -> bool {
+        F::relative_eq(&self.0, &other.0, epsilon, max_relative)
+    }
+}
+
 impl<F: Float + NumAssign + NumOps + AngleConst> From<F> for Degrees<F> {
     fn from(f: F) -> Self {
         Self(Self::normalize(f))
