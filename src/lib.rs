@@ -5,6 +5,7 @@
 #[macro_use]
 extern crate serde_derive;
 
+pub use approx::*;
 use num::traits::{Float, NumAssign, NumOps};
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
@@ -79,24 +80,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> Angle<F> {
             Angle::Radians(radians) => radians.tan(),
         }
     }
-
-    /// For use during testing where limitations of float representation of real numbers
-    /// means exact equivalence is unrealistic.
-    pub fn approx_eq(&self, other: &Self) -> bool {
-        match self {
-            Angle::Degrees(degrees) => match other {
-                Angle::Degrees(other) => degrees.approx_eq(*other),
-                Angle::Radians(other) => degrees.approx_eq((*other).into()),
-            },
-            Angle::Radians(radians) => match other {
-                Angle::Degrees(other) => radians.approx_eq((*other).into()),
-                Angle::Radians(other) => radians.approx_eq(*other),
-            },
-        }
-    }
 }
-
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 impl<F: Float + NumAssign + NumOps + RadiansConst + AbsDiffEq> AbsDiffEq for Angle<F> {
     type Epsilon = F::Epsilon;
@@ -429,7 +413,7 @@ mod tests {
         );
         let mut angle = Angle::<f64>::from(Degrees::from(15.0));
         angle -= Angle::<f64>::from(Degrees::from(30.0));
-        assert!(angle.approx_eq(&Angle::<f64>::from(Degrees::from(-15.0))));
+        assert_relative_eq!(angle, Angle::<f64>::from(Degrees::from(-15.0)));
     }
 
     #[test]
@@ -448,7 +432,7 @@ mod tests {
         );
         let mut angle = Angle::<f64>::from(Degrees::from(15.0));
         angle /= 3.0;
-        assert!(angle.approx_eq(&Angle::<f64>::from(Degrees::from(5.0))));
+        assert_relative_eq!(angle, Angle::<f64>::from(Degrees::from(5.0)));
     }
 
     #[test]
@@ -459,16 +443,18 @@ mod tests {
         );
         let mut angle = Angle::<f64>::from(Degrees::from(15.0));
         angle *= 3.0;
-        assert!(angle.approx_eq(&Angle::<f64>::from(Degrees::from(45.0))));
+        assert_relative_eq!(angle, Angle::<f64>::from(Degrees::from(45.0)));
     }
 
     #[test]
     fn opposite() {
-        assert!(Angle::<f64>::from(Degrees::from(45.0))
-            .opposite()
-            .approx_eq(&Angle::<f64>::from(Degrees::from(-135.0))));
-        assert!(Angle::<f64>::from(Degrees::from(-60.0))
-            .opposite()
-            .approx_eq(&Angle::<f64>::from(Degrees::from(120.0))));
+        assert_relative_eq!(
+            Angle::<f64>::from(Degrees::from(45.0)).opposite(),
+            Angle::<f64>::from(Degrees::from(-135.0))
+        );
+        assert_relative_eq!(
+            Angle::<f64>::from(Degrees::from(-60.0)).opposite(),
+            Angle::<f64>::from(Degrees::from(120.0))
+        );
     }
 }

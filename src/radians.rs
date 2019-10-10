@@ -1,6 +1,7 @@
 // Copyright 2019 Peter Williams <pwil3058@gmail.com> <pwil3058@bigpond.net.au>
 ///! This module provides floating point types that represent angles (in radians) restricted to the
 ///! confines of a circle (i.e. their value is guaranteed to be in the range -PI to +PI).
+pub use approx::*;
 use num::traits::{Float, NumAssign, NumOps};
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
@@ -103,23 +104,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> Radians<F> {
             (self.0.to_radians().cos(), self.0.to_radians().sin())
         }
     }
-
-    /// For use during testing where limitations of float representation of real numbers
-    /// means exact equivalence is unrealistic.
-    pub fn approx_eq(self, other: Self) -> bool {
-        if self.0.is_nan() {
-            other.0.is_nan()
-        } else if other.0.is_nan() {
-            false
-        } else if self.0 == F::from(0.0).unwrap() || other.0 == F::from(0.0).unwrap() {
-            (self.0 + other.0).abs() < F::ANGLE_APPROX_EQ_LIMIT
-        } else {
-            ((self - other).0 / self.0).abs() < F::ANGLE_APPROX_EQ_LIMIT
-        }
-    }
 }
-
-use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 impl<F: Float + NumAssign + NumOps + RadiansConst + AbsDiffEq> AbsDiffEq for Radians<F> {
     type Epsilon = F::Epsilon;
@@ -310,7 +295,7 @@ mod tests {
 
     #[test]
     fn degrees() {
-        assert!(Radians::<f64>::NEG_DEG_150.approx_eq(Degrees::from(-150.0).into()));
+        assert_relative_eq!(Radians::<f64>::NEG_DEG_150, Degrees::from(-150.0).into());
     }
 
     #[test]
@@ -342,7 +327,7 @@ mod tests {
         );
         let mut angle = Radians::<f64>::from_degrees(15.0);
         angle -= Radians::<f64>::from_degrees(30.0);
-        assert!(angle.approx_eq(Radians::<f64>::from_degrees(-15.0)));
+        assert_relative_eq!(angle, Radians::<f64>::from_degrees(-15.0));
     }
 
     #[test]
@@ -359,7 +344,7 @@ mod tests {
         );
         let mut angle = Radians::<f64>::from_degrees(15.0);
         angle /= 3.0;
-        assert!(angle.approx_eq(Radians::<f64>::from_degrees(5.0)));
+        assert_relative_eq!(angle, Radians::<f64>::from_degrees(5.0));
     }
 
     #[test]
@@ -370,16 +355,18 @@ mod tests {
         );
         let mut angle = Radians::<f64>::from_degrees(15.0);
         angle *= 3.0;
-        assert!(angle.approx_eq(Radians::<f64>::from_degrees(45.0)));
+        assert_relative_eq!(angle, Radians::<f64>::from_degrees(45.0));
     }
 
     #[test]
     fn opposite() {
-        assert!(Radians::<f64>::from_degrees(45.0)
-            .opposite()
-            .approx_eq(Radians::<f64>::from_degrees(-135.0)));
-        assert!(Radians::<f64>::from_degrees(-60.0)
-            .opposite()
-            .approx_eq(Radians::<f64>::from_degrees(120.0)));
+        assert_relative_eq!(
+            Radians::<f64>::from_degrees(45.0).opposite(),
+            Radians::<f64>::from_degrees(-135.0)
+        );
+        assert_relative_eq!(
+            Radians::<f64>::from_degrees(-60.0).opposite(),
+            Radians::<f64>::from_degrees(120.0)
+        );
     }
 }
