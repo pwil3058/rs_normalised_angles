@@ -3,7 +3,6 @@
 ///! confines of a circle (i.e. their value is guaranteed to be in the range -180 to +180).
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
-    default::Default,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
