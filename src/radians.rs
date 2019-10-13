@@ -1,47 +1,69 @@
 // Copyright 2019 Peter Williams <pwil3058@gmail.com> <pwil3058@bigpond.net.au>
 ///! This module provides floating point types that represent angles (in radians) restricted to the
 ///! confines of a circle (i.e. their value is guaranteed to be in the range -PI to +PI).
-pub use approx::*;
-use num::traits::{Float, NumAssign, NumOps};
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-use crate::{degrees::Degrees, RadiansConst};
+use float_plus::*;
+
+use crate::degrees::Degrees;
+use crate::DegreesConst;
+
+pub trait RadiansConst {
+    const DEG_0_RAD: Self;
+    const DEG_30_RAD: Self;
+    const DEG_45_RAD: Self;
+    const DEG_60_RAD: Self;
+    const DEG_90_RAD: Self;
+    const DEG_120_RAD: Self;
+    const DEG_135_RAD: Self;
+    const DEG_150_RAD: Self;
+    const DEG_180_RAD: Self;
+    const DEG_360_RAD: Self;
+    const NEG_DEG_30_RAD: Self;
+    const NEG_DEG_45_RAD: Self;
+    const NEG_DEG_60_RAD: Self;
+    const NEG_DEG_90_RAD: Self;
+    const NEG_DEG_120_RAD: Self;
+    const NEG_DEG_135_RAD: Self;
+    const NEG_DEG_150_RAD: Self;
+    const NEG_DEG_180_RAD: Self;
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash)]
-pub struct Radians<F: Float + NumAssign + NumOps + RadiansConst>(F);
+pub struct Radians<F: FloatPlus + RadiansConst>(F);
 
-impl<F: Float + NumAssign + NumOps + RadiansConst> Radians<F> {
-    pub const DEG_0: Self = Self(F::DEG_0);
-    pub const DEG_30: Self = Self(F::DEG_30);
-    pub const DEG_45: Self = Self(F::DEG_45);
-    pub const DEG_60: Self = Self(F::DEG_60);
-    pub const DEG_90: Self = Self(F::DEG_90);
-    pub const DEG_120: Self = Self(F::DEG_120);
-    pub const DEG_135: Self = Self(F::DEG_135);
-    pub const DEG_150: Self = Self(F::DEG_150);
-    pub const DEG_180: Self = Self(F::DEG_180);
-    pub const NEG_DEG_30: Self = Self(F::NEG_DEG_30);
-    pub const NEG_DEG_45: Self = Self(F::NEG_DEG_45);
-    pub const NEG_DEG_60: Self = Self(F::NEG_DEG_60);
-    pub const NEG_DEG_90: Self = Self(F::NEG_DEG_90);
-    pub const NEG_DEG_120: Self = Self(F::NEG_DEG_120);
-    pub const NEG_DEG_135: Self = Self(F::NEG_DEG_135);
-    pub const NEG_DEG_150: Self = Self(F::NEG_DEG_150);
-    pub const NEG_DEG_180: Self = Self(F::NEG_DEG_180);
+impl<F: FloatPlus + RadiansConst> Radians<F> {
+    pub const DEG_0_RAD: Self = Self(F::DEG_0_RAD);
+    pub const DEG_30_RAD: Self = Self(F::DEG_30_RAD);
+    pub const DEG_45_RAD: Self = Self(F::DEG_45_RAD);
+    pub const DEG_60_RAD: Self = Self(F::DEG_60_RAD);
+    pub const DEG_90_RAD: Self = Self(F::DEG_90_RAD);
+    pub const DEG_120_RAD: Self = Self(F::DEG_120_RAD);
+    pub const DEG_135_RAD: Self = Self(F::DEG_135_RAD);
+    pub const DEG_150_RAD: Self = Self(F::DEG_150_RAD);
+    pub const DEG_180_RAD: Self = Self(F::DEG_180_RAD);
+    pub const NEG_DEG_30_RAD: Self = Self(F::NEG_DEG_30_RAD);
+    pub const NEG_DEG_45_RAD: Self = Self(F::NEG_DEG_45_RAD);
+    pub const NEG_DEG_60_RAD: Self = Self(F::NEG_DEG_60_RAD);
+    pub const NEG_DEG_90_RAD: Self = Self(F::NEG_DEG_90_RAD);
+    pub const NEG_DEG_120_RAD: Self = Self(F::NEG_DEG_120_RAD);
+    pub const NEG_DEG_135_RAD: Self = Self(F::NEG_DEG_135_RAD);
+    pub const NEG_DEG_150_RAD: Self = Self(F::NEG_DEG_150_RAD);
+    pub const NEG_DEG_180_RAD: Self = Self(F::NEG_DEG_180_RAD);
 
     fn normalize<A: Into<F> + Copy>(arg: A) -> F {
         let mut result: F = arg.into();
         if !result.is_nan() {
-            if result > F::DEG_180 {
-                while result > F::DEG_180 {
-                    result -= F::DEG_180 * F::from(2.0).unwrap();
+            if result > F::DEG_180_RAD {
+                while result > F::DEG_180_RAD {
+                    result -= F::DEG_180_RAD * F::from(2.0).unwrap();
                 }
-            } else if result < -F::DEG_180 {
-                while result < -F::DEG_180 {
-                    result += F::DEG_180 * F::from(2.0).unwrap();
+            } else if result < -F::DEG_180_RAD {
+                while result < -F::DEG_180_RAD {
+                    result += F::DEG_180_RAD * F::from(2.0).unwrap();
                 }
             }
         };
@@ -82,7 +104,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> Radians<F> {
     }
 
     pub fn opposite(self) -> Self {
-        (self.0 + F::DEG_180).into()
+        (self.0 + F::DEG_180_RAD).into()
     }
 
     pub fn cos(self) -> F {
@@ -106,63 +128,41 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> Radians<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + AbsDiffEq> AbsDiffEq for Radians<F> {
-    type Epsilon = F::Epsilon;
-
-    fn default_epsilon() -> F::Epsilon {
-        F::default_epsilon()
+impl<F: FloatPlus + RadiansConst> FloatApproxEq<F> for Radians<F> {
+    fn abs_diff(&self, other: &Self) -> F {
+        (self.0 - other.0).abs() % F::DEG_360_RAD
     }
 
-    fn abs_diff_eq(&self, other: &Self, epsilon: F::Epsilon) -> bool {
-        F::abs_diff_eq(&self.0, &other.0, epsilon)
+    fn rel_diff_scale_factor(&self, other: &Self) -> F {
+        self.0.abs().max(other.0.abs())
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + UlpsEq> UlpsEq for Radians<F> {
-    fn default_max_ulps() -> u32 {
-        F::default_max_ulps()
-    }
-
-    fn ulps_eq(&self, other: &Self, epsilon: F::Epsilon, max_ulps: u32) -> bool {
-        F::ulps_eq(&self.0, &other.0, epsilon, max_ulps)
-    }
-}
-
-impl<F: Float + NumAssign + NumOps + RadiansConst + RelativeEq> RelativeEq for Radians<F> {
-    fn default_max_relative() -> F::Epsilon {
-        F::default_max_relative()
-    }
-
-    fn relative_eq(&self, other: &Self, epsilon: F::Epsilon, max_relative: F::Epsilon) -> bool {
-        F::relative_eq(&self.0, &other.0, epsilon, max_relative)
-    }
-}
-
-impl<F: Float + NumAssign + NumOps + RadiansConst> From<F> for Radians<F> {
+impl<F: FloatPlus + RadiansConst> From<F> for Radians<F> {
     fn from(f: F) -> Self {
         Self(Self::normalize(f))
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst> From<(F, F)> for Radians<F> {
+impl<F: FloatPlus + RadiansConst> From<(F, F)> for Radians<F> {
     fn from(xy: (F, F)) -> Self {
         Self::atan2(xy.0, xy.1)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst> From<Degrees<F>> for Radians<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> From<Degrees<F>> for Radians<F> {
     fn from(degrees: Degrees<F>) -> Self {
         Self(degrees.radians())
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst> From<&Degrees<F>> for Radians<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> From<&Degrees<F>> for Radians<F> {
     fn from(degrees: &Degrees<F>) -> Self {
         Self(degrees.radians())
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst> Neg for Radians<F> {
+impl<F: FloatPlus + RadiansConst> Neg for Radians<F> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -170,7 +170,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> Neg for Radians<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst> Add for Radians<F> {
+impl<F: FloatPlus + RadiansConst> Add for Radians<F> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -178,13 +178,13 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> Add for Radians<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst> AddAssign for Radians<F> {
+impl<F: FloatPlus + RadiansConst> AddAssign for Radians<F> {
     fn add_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 + other.0)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst> Sub for Radians<F> {
+impl<F: FloatPlus + RadiansConst> Sub for Radians<F> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -192,7 +192,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> Sub for Radians<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst> SubAssign for Radians<F> {
+impl<F: FloatPlus + RadiansConst> SubAssign for Radians<F> {
     fn sub_assign(&mut self, other: Self) {
         self.0 = Self::normalize(self.0 - other.0)
     }
@@ -200,7 +200,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> SubAssign for Radians<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating equality i.e. -PI and PI are the same angle.
-impl<F: Float + NumAssign + NumOps + RadiansConst> PartialEq for Radians<F> {
+impl<F: FloatPlus + RadiansConst> PartialEq for Radians<F> {
     fn eq(&self, other: &Self) -> bool {
         if self.0.is_nan() {
             other.0.is_nan()
@@ -214,7 +214,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> PartialEq for Radians<F> {
 
 /// Takes into account the circular nature of angle values when
 /// evaluating order.
-impl<F: Float + NumAssign + NumOps + RadiansConst> PartialOrd for Radians<F> {
+impl<F: FloatPlus + RadiansConst> PartialOrd for Radians<F> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.0.is_nan() {
             if other.0.is_nan() {
@@ -239,7 +239,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst> PartialOrd for Radians<F> {
 
 impl<F, Scalar> Div<Scalar> for Radians<F>
 where
-    F: Float + NumAssign + NumOps + RadiansConst,
+    F: FloatPlus + RadiansConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
@@ -251,7 +251,7 @@ where
 
 impl<F, Scalar> DivAssign<Scalar> for Radians<F>
 where
-    F: Float + NumAssign + NumOps + RadiansConst,
+    F: FloatPlus + RadiansConst,
     Scalar: Into<F> + Copy,
 {
     fn div_assign(&mut self, rhs: Scalar) {
@@ -261,7 +261,7 @@ where
 
 impl<F, Scalar> Mul<Scalar> for Radians<F>
 where
-    F: Float + NumAssign + NumOps + RadiansConst,
+    F: FloatPlus + RadiansConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
@@ -273,12 +273,54 @@ where
 
 impl<F, Scalar> MulAssign<Scalar> for Radians<F>
 where
-    F: Float + NumAssign + NumOps + RadiansConst,
+    F: FloatPlus + RadiansConst,
     Scalar: Into<F> + Copy,
 {
     fn mul_assign(&mut self, rhs: Scalar) {
         self.0 = Self::normalize(self.0 * rhs.into())
     }
+}
+
+impl RadiansConst for f32 {
+    const DEG_0_RAD: Self = 0.0;
+    const DEG_30_RAD: Self = std::f32::consts::FRAC_PI_6;
+    const DEG_45_RAD: Self = std::f32::consts::FRAC_PI_4;
+    const DEG_60_RAD: Self = std::f32::consts::FRAC_PI_3;
+    const DEG_90_RAD: Self = std::f32::consts::FRAC_PI_2;
+    const DEG_120_RAD: Self = std::f32::consts::FRAC_PI_3 * 2.0;
+    const DEG_135_RAD: Self = std::f32::consts::FRAC_PI_4 * 3.0;
+    const DEG_150_RAD: Self = std::f32::consts::FRAC_PI_6 * 5.0;
+    const DEG_180_RAD: Self = std::f32::consts::PI;
+    const DEG_360_RAD: Self = std::f32::consts::PI * 2.0;
+    const NEG_DEG_30_RAD: Self = -std::f32::consts::FRAC_PI_6;
+    const NEG_DEG_45_RAD: Self = -std::f32::consts::FRAC_PI_4;
+    const NEG_DEG_60_RAD: Self = -std::f32::consts::FRAC_PI_3;
+    const NEG_DEG_90_RAD: Self = -std::f32::consts::FRAC_PI_2;
+    const NEG_DEG_120_RAD: Self = -std::f32::consts::FRAC_PI_3 * 2.0;
+    const NEG_DEG_135_RAD: Self = -std::f32::consts::FRAC_PI_4 * 3.0;
+    const NEG_DEG_150_RAD: Self = -std::f32::consts::FRAC_PI_6 * 5.0;
+    const NEG_DEG_180_RAD: Self = -std::f32::consts::PI;
+}
+
+impl RadiansConst for f64 {
+    const DEG_0_RAD: Self = 0.0;
+    const DEG_30_RAD: Self = std::f64::consts::FRAC_PI_6;
+    const DEG_45_RAD: Self = std::f64::consts::FRAC_PI_4;
+    const DEG_60_RAD: Self = std::f64::consts::FRAC_PI_3;
+    const DEG_90_RAD: Self = std::f64::consts::FRAC_PI_2;
+    const DEG_120_RAD: Self = std::f64::consts::FRAC_PI_3 * 2.0;
+    const DEG_135_RAD: Self = std::f64::consts::FRAC_PI_4 * 3.0;
+    const DEG_150_RAD: Self = std::f64::consts::FRAC_PI_6 * 5.0;
+    const DEG_180_RAD: Self = std::f64::consts::PI;
+    const DEG_360_RAD: Self = std::f64::consts::PI * 2.0;
+    const NEG_DEG_30_RAD: Self = -std::f64::consts::FRAC_PI_6;
+    const NEG_DEG_45_RAD: Self = -std::f64::consts::FRAC_PI_4;
+    const NEG_DEG_60_RAD: Self = -std::f64::consts::FRAC_PI_3;
+    const NEG_DEG_90_RAD: Self = -std::f64::consts::FRAC_PI_2;
+    const NEG_DEG_120_RAD: Self = -std::f64::consts::FRAC_PI_3 * 2.0;
+    const NEG_DEG_135_RAD: Self = -std::f64::consts::FRAC_PI_4 * 3.0;
+    const NEG_DEG_150_RAD: Self = -std::f64::consts::FRAC_PI_6 * 5.0;
+    const NEG_DEG_180_RAD: Self = -std::f64::consts::PI;
 }
 
 #[cfg(test)]
@@ -295,7 +337,10 @@ mod tests {
 
     #[test]
     fn degrees() {
-        assert_relative_eq!(Radians::<f64>::NEG_DEG_150, Degrees::from(-150.0).into());
+        assert_approx_eq!(
+            Radians::<f64>::NEG_DEG_150_RAD,
+            Degrees::from(-150.0).into()
+        );
     }
 
     #[test]
@@ -327,7 +372,7 @@ mod tests {
         );
         let mut angle = Radians::<f64>::from_degrees(15.0);
         angle -= Radians::<f64>::from_degrees(30.0);
-        assert_relative_eq!(angle, Radians::<f64>::from_degrees(-15.0));
+        assert_approx_eq!(angle, Radians::<f64>::from_degrees(-15.0));
     }
 
     #[test]
@@ -344,7 +389,7 @@ mod tests {
         );
         let mut angle = Radians::<f64>::from_degrees(15.0);
         angle /= 3.0;
-        assert_relative_eq!(angle, Radians::<f64>::from_degrees(5.0));
+        assert_approx_eq!(angle, Radians::<f64>::from_degrees(5.0));
     }
 
     #[test]
@@ -355,16 +400,16 @@ mod tests {
         );
         let mut angle = Radians::<f64>::from_degrees(15.0);
         angle *= 3.0;
-        assert_relative_eq!(angle, Radians::<f64>::from_degrees(45.0));
+        assert_approx_eq!(angle, Radians::<f64>::from_degrees(45.0));
     }
 
     #[test]
     fn opposite() {
-        assert_relative_eq!(
+        assert_approx_eq!(
             Radians::<f64>::from_degrees(45.0).opposite(),
             Radians::<f64>::from_degrees(-135.0)
         );
-        assert_relative_eq!(
+        assert_approx_eq!(
             Radians::<f64>::from_degrees(-60.0).opposite(),
             Radians::<f64>::from_degrees(120.0)
         );

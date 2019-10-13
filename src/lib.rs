@@ -5,12 +5,12 @@
 #[macro_use]
 extern crate serde_derive;
 
-pub use approx::*;
-use num::traits::{Float, NumAssign, NumOps};
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
+
+pub use float_plus::*;
 
 pub mod degrees;
 pub mod radians;
@@ -19,12 +19,12 @@ pub use crate::degrees::*;
 pub use crate::radians::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Hash)]
-pub enum Angle<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> {
+pub enum Angle<F: FloatPlus + RadiansConst + DegreesConst> {
     Degrees(Degrees<F>),
     Radians(Radians<F>),
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> Angle<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> Angle<F> {
     pub fn abs(&self) -> Self {
         match self {
             Angle::Degrees(degrees) => Angle::Degrees(degrees.abs()),
@@ -82,78 +82,47 @@ impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> Angle<F> {
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + AbsDiffEq> AbsDiffEq for Angle<F> {
-    type Epsilon = F::Epsilon;
-
-    fn default_epsilon() -> F::Epsilon {
-        F::default_epsilon()
-    }
-
-    fn abs_diff_eq(&self, other: &Self, epsilon: F::Epsilon) -> bool {
+impl<F: FloatPlus + RadiansConst + DegreesConst> FloatApproxEq<F> for Angle<F> {
+    fn abs_diff(&self, other: &Self) -> F {
         match self {
             Angle::Degrees(degrees) => match other {
-                Angle::Degrees(other) => degrees.abs_diff_eq(other, epsilon),
-                Angle::Radians(other) => degrees.abs_diff_eq(&other.into(), epsilon),
+                Angle::Degrees(other) => degrees.abs_diff(other),
+                Angle::Radians(other) => degrees.abs_diff(&other.into()),
             },
             Angle::Radians(radians) => match other {
-                Angle::Degrees(other) => radians.abs_diff_eq(&other.into(), epsilon),
-                Angle::Radians(other) => radians.abs_diff_eq(other, epsilon),
+                Angle::Degrees(other) => radians.abs_diff(&other.into()),
+                Angle::Radians(other) => radians.abs_diff(other),
+            },
+        }
+    }
+
+    fn rel_diff_scale_factor(&self, other: &Self) -> F {
+        match self {
+            Angle::Degrees(degrees) => match other {
+                Angle::Degrees(other) => degrees.rel_diff_scale_factor(other),
+                Angle::Radians(other) => degrees.rel_diff_scale_factor(&other.into()),
+            },
+            Angle::Radians(radians) => match other {
+                Angle::Degrees(other) => radians.rel_diff_scale_factor(&other.into()),
+                Angle::Radians(other) => radians.rel_diff_scale_factor(other),
             },
         }
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + UlpsEq> UlpsEq for Angle<F> {
-    fn default_max_ulps() -> u32 {
-        F::default_max_ulps()
-    }
-
-    fn ulps_eq(&self, other: &Self, epsilon: F::Epsilon, max_ulps: u32) -> bool {
-        match self {
-            Angle::Degrees(degrees) => match other {
-                Angle::Degrees(other) => degrees.ulps_eq(other, epsilon, max_ulps),
-                Angle::Radians(other) => degrees.ulps_eq(&other.into(), epsilon, max_ulps),
-            },
-            Angle::Radians(radians) => match other {
-                Angle::Degrees(other) => radians.ulps_eq(&other.into(), epsilon, max_ulps),
-                Angle::Radians(other) => radians.ulps_eq(other, epsilon, max_ulps),
-            },
-        }
-    }
-}
-
-impl<F: Float + NumAssign + NumOps + RadiansConst + RelativeEq> RelativeEq for Angle<F> {
-    fn default_max_relative() -> F::Epsilon {
-        F::default_max_relative()
-    }
-
-    fn relative_eq(&self, other: &Self, epsilon: F::Epsilon, max_relative: F::Epsilon) -> bool {
-        match self {
-            Angle::Degrees(degrees) => match other {
-                Angle::Degrees(other) => degrees.relative_eq(other, epsilon, max_relative),
-                Angle::Radians(other) => degrees.relative_eq(&other.into(), epsilon, max_relative),
-            },
-            Angle::Radians(radians) => match other {
-                Angle::Degrees(other) => radians.relative_eq(&other.into(), epsilon, max_relative),
-                Angle::Radians(other) => radians.relative_eq(other, epsilon, max_relative),
-            },
-        }
-    }
-}
-
-impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> From<Radians<F>> for Angle<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> From<Radians<F>> for Angle<F> {
     fn from(radians: Radians<F>) -> Self {
         Angle::Radians(radians)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> From<Degrees<F>> for Angle<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> From<Degrees<F>> for Angle<F> {
     fn from(degrees: Degrees<F>) -> Self {
         Angle::Degrees(degrees)
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> Neg for Angle<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> Neg for Angle<F> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -164,7 +133,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> Neg for Angle<F>
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> Add for Angle<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> Add for Angle<F> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
@@ -181,7 +150,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> Add for Angle<F>
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> AddAssign for Angle<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> AddAssign for Angle<F> {
     fn add_assign(&mut self, other: Self) {
         match self {
             Angle::Degrees(ref mut degrees) => match other {
@@ -196,7 +165,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> AddAssign for An
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> Sub for Angle<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> Sub for Angle<F> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -213,7 +182,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> Sub for Angle<F>
     }
 }
 
-impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> SubAssign for Angle<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> SubAssign for Angle<F> {
     fn sub_assign(&mut self, other: Self) {
         match self {
             Angle::Degrees(ref mut degrees) => match other {
@@ -230,7 +199,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> SubAssign for An
 
 /// Takes into account the circular nature of angle values when
 /// evaluating equality i.e. -PI and PI are the same angle.
-impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> PartialEq for Angle<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> PartialEq for Angle<F> {
     fn eq(&self, other: &Self) -> bool {
         match self {
             Angle::Degrees(degrees) => match other {
@@ -247,7 +216,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> PartialEq for An
 
 /// Takes into account the circular nature of angle values when
 /// evaluating order.
-impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> PartialOrd for Angle<F> {
+impl<F: FloatPlus + RadiansConst + DegreesConst> PartialOrd for Angle<F> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match self {
             Angle::Degrees(degrees) => match other {
@@ -264,7 +233,7 @@ impl<F: Float + NumAssign + NumOps + RadiansConst + AngleConst> PartialOrd for A
 
 impl<F, Scalar> Div<Scalar> for Angle<F>
 where
-    F: Float + NumAssign + NumOps + RadiansConst + AngleConst,
+    F: FloatPlus + RadiansConst + DegreesConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
@@ -279,7 +248,7 @@ where
 
 impl<F, Scalar> DivAssign<Scalar> for Angle<F>
 where
-    F: Float + NumAssign + NumOps + RadiansConst + AngleConst,
+    F: FloatPlus + RadiansConst + DegreesConst,
     Scalar: Into<F> + Copy,
 {
     fn div_assign(&mut self, rhs: Scalar) {
@@ -292,7 +261,7 @@ where
 
 impl<F, Scalar> Mul<Scalar> for Angle<F>
 where
-    F: Float + NumAssign + NumOps + RadiansConst + AngleConst,
+    F: FloatPlus + RadiansConst + DegreesConst,
     Scalar: Into<F> + Copy,
 {
     type Output = Self;
@@ -307,7 +276,7 @@ where
 
 impl<F, Scalar> MulAssign<Scalar> for Angle<F>
 where
-    F: Float + NumAssign + NumOps + RadiansConst + AngleConst,
+    F: FloatPlus + RadiansConst + DegreesConst,
     Scalar: Into<F> + Copy,
 {
     fn mul_assign(&mut self, rhs: Scalar) {
@@ -316,78 +285,6 @@ where
             Angle::Radians(ref mut radians) => radians.mul_assign(rhs),
         }
     }
-}
-
-pub trait RadiansConst: AngleConst {
-    const DEG_0: Self;
-    const DEG_30: Self;
-    const DEG_45: Self;
-    const DEG_60: Self;
-    const DEG_90: Self;
-    const DEG_120: Self;
-    const DEG_135: Self;
-    const DEG_150: Self;
-    const DEG_180: Self;
-    const NEG_DEG_30: Self;
-    const NEG_DEG_45: Self;
-    const NEG_DEG_60: Self;
-    const NEG_DEG_90: Self;
-    const NEG_DEG_120: Self;
-    const NEG_DEG_135: Self;
-    const NEG_DEG_150: Self;
-    const NEG_DEG_180: Self;
-}
-
-pub trait AngleConst {
-    const ANGLE_APPROX_EQ_LIMIT: Self;
-}
-
-impl RadiansConst for f32 {
-    const DEG_0: Self = 0.0;
-    const DEG_30: Self = std::f32::consts::FRAC_PI_6;
-    const DEG_45: Self = std::f32::consts::FRAC_PI_4;
-    const DEG_60: Self = std::f32::consts::FRAC_PI_3;
-    const DEG_90: Self = std::f32::consts::FRAC_PI_2;
-    const DEG_120: Self = std::f32::consts::FRAC_PI_3 * 2.0;
-    const DEG_135: Self = std::f32::consts::FRAC_PI_4 * 3.0;
-    const DEG_150: Self = std::f32::consts::FRAC_PI_6 * 5.0;
-    const DEG_180: Self = std::f32::consts::PI;
-    const NEG_DEG_30: Self = -std::f32::consts::FRAC_PI_6;
-    const NEG_DEG_45: Self = -std::f32::consts::FRAC_PI_4;
-    const NEG_DEG_60: Self = -std::f32::consts::FRAC_PI_3;
-    const NEG_DEG_90: Self = -std::f32::consts::FRAC_PI_2;
-    const NEG_DEG_120: Self = -std::f32::consts::FRAC_PI_3 * 2.0;
-    const NEG_DEG_135: Self = -std::f32::consts::FRAC_PI_4 * 3.0;
-    const NEG_DEG_150: Self = -std::f32::consts::FRAC_PI_6 * 5.0;
-    const NEG_DEG_180: Self = -std::f32::consts::PI;
-}
-
-impl AngleConst for f32 {
-    const ANGLE_APPROX_EQ_LIMIT: Self = 0.000001;
-}
-
-impl RadiansConst for f64 {
-    const DEG_0: Self = 0.0;
-    const DEG_30: Self = std::f64::consts::FRAC_PI_6;
-    const DEG_45: Self = std::f64::consts::FRAC_PI_4;
-    const DEG_60: Self = std::f64::consts::FRAC_PI_3;
-    const DEG_90: Self = std::f64::consts::FRAC_PI_2;
-    const DEG_120: Self = std::f64::consts::FRAC_PI_3 * 2.0;
-    const DEG_135: Self = std::f64::consts::FRAC_PI_4 * 3.0;
-    const DEG_150: Self = std::f64::consts::FRAC_PI_6 * 5.0;
-    const DEG_180: Self = std::f64::consts::PI;
-    const NEG_DEG_30: Self = -std::f64::consts::FRAC_PI_6;
-    const NEG_DEG_45: Self = -std::f64::consts::FRAC_PI_4;
-    const NEG_DEG_60: Self = -std::f64::consts::FRAC_PI_3;
-    const NEG_DEG_90: Self = -std::f64::consts::FRAC_PI_2;
-    const NEG_DEG_120: Self = -std::f64::consts::FRAC_PI_3 * 2.0;
-    const NEG_DEG_135: Self = -std::f64::consts::FRAC_PI_4 * 3.0;
-    const NEG_DEG_150: Self = -std::f64::consts::FRAC_PI_6 * 5.0;
-    const NEG_DEG_180: Self = -std::f64::consts::PI;
-}
-
-impl AngleConst for f64 {
-    const ANGLE_APPROX_EQ_LIMIT: Self = 0.0000000001;
 }
 
 #[cfg(test)]
@@ -413,7 +310,7 @@ mod tests {
         );
         let mut angle = Angle::<f64>::from(Degrees::from(15.0));
         angle -= Angle::<f64>::from(Degrees::from(30.0));
-        assert_relative_eq!(angle, Angle::<f64>::from(Degrees::from(-15.0)));
+        assert_approx_eq!(angle, Angle::<f64>::from(Degrees::from(-15.0)));
     }
 
     #[test]
@@ -432,7 +329,7 @@ mod tests {
         );
         let mut angle = Angle::<f64>::from(Degrees::from(15.0));
         angle /= 3.0;
-        assert_relative_eq!(angle, Angle::<f64>::from(Degrees::from(5.0)));
+        assert_approx_eq!(angle, Angle::<f64>::from(Degrees::from(5.0)));
     }
 
     #[test]
@@ -443,16 +340,16 @@ mod tests {
         );
         let mut angle = Angle::<f64>::from(Degrees::from(15.0));
         angle *= 3.0;
-        assert_relative_eq!(angle, Angle::<f64>::from(Degrees::from(45.0)));
+        assert_approx_eq!(angle, Angle::<f64>::from(Degrees::from(45.0)));
     }
 
     #[test]
     fn opposite() {
-        assert_relative_eq!(
+        assert_approx_eq!(
             Angle::<f64>::from(Degrees::from(45.0)).opposite(),
             Angle::<f64>::from(Degrees::from(-135.0))
         );
-        assert_relative_eq!(
+        assert_approx_eq!(
             Angle::<f64>::from(Degrees::from(-60.0)).opposite(),
             Angle::<f64>::from(Degrees::from(120.0))
         );
