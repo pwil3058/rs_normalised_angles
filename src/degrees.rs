@@ -10,7 +10,7 @@ use std::{
 use crate::radians::*;
 pub use float_plus::*;
 
-pub trait DegreesConst {
+pub trait DegreesConst: Copy {
     const DEG_0: Self;
     const DEG_30: Self;
     const DEG_45: Self;

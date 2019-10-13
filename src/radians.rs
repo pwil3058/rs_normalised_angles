@@ -11,7 +11,7 @@ use float_plus::*;
 use crate::degrees::Degrees;
 use crate::DegreesConst;
 
-pub trait RadiansConst {
+pub trait RadiansConst: Copy {
     const DEG_0_RAD: Self;
     const DEG_30_RAD: Self;
     const DEG_45_RAD: Self;
