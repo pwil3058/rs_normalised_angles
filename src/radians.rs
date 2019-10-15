@@ -70,9 +70,18 @@ impl<F: FloatPlus + RadiansConst> Radians<F> {
         result
     }
 
+    pub fn asin(sin: F) -> Self {
+        debug_assert!(sin >= F::NEG_ONE && sin <= F::ONE);
+        Self(sin.asin())
+    }
+
+    pub fn acos(cos: F) -> Self {
+        debug_assert!(cos >= F::NEG_ONE && cos <= F::ONE);
+        Self(cos.acos())
+    }
+
     pub fn atan2(x: F, y: F) -> Self {
-        let zero = F::from(0.0).unwrap();
-        if x == zero && y == zero {
+        if x == F::ZERO && y == F::ZERO {
             Self(F::nan())
         } else {
             Self(y.atan2(x))

@@ -55,23 +55,31 @@ impl<F: FloatPlus + DegreesConst> Degrees<F> {
     fn normalize<A: Into<F> + Copy>(arg: A) -> F {
         let mut result: F = arg.into();
         if !result.is_nan() {
-            let half_circle = F::from(180.0).unwrap();
-            if result > half_circle {
-                while result > half_circle {
-                    result -= F::from(360.0).unwrap();
+            if result > F::DEG_180 {
+                while result > F::DEG_180 {
+                    result -= F::DEG_360;
                 }
-            } else if result < -half_circle {
-                while result < -half_circle {
-                    result += F::from(360.0).unwrap();
+            } else if result < F::NEG_DEG_180 {
+                while result < F::NEG_DEG_180 {
+                    result += F::DEG_360;
                 }
             }
         };
         result
     }
 
+    pub fn asin(sin: F) -> Self {
+        debug_assert!(sin >= F::NEG_ONE && sin <= F::ONE);
+        Self(sin.asin().to_degrees())
+    }
+
+    pub fn acos(cos: F) -> Self {
+        debug_assert!(cos >= F::NEG_ONE && cos <= F::ONE);
+        Self(cos.acos().to_degrees())
+    }
+
     pub fn atan2(x: F, y: F) -> Self {
-        let zero = F::from(0.0).unwrap();
-        if x == zero && y == zero {
+        if x == F::ZERO && y == F::ZERO {
             Self(F::nan())
         } else {
             Self(y.atan2(x).to_degrees())
