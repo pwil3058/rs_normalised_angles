@@ -45,6 +45,7 @@ impl<F: FloatPlus + RadiansConst> Radians<F> {
     pub const DEG_135_RAD: Self = Self(F::DEG_135_RAD);
     pub const DEG_150_RAD: Self = Self(F::DEG_150_RAD);
     pub const DEG_180_RAD: Self = Self(F::DEG_180_RAD);
+    pub const DEG_360_RAD: Self = Self(F::DEG_360_RAD);
     pub const NEG_DEG_30_RAD: Self = Self(F::NEG_DEG_30_RAD);
     pub const NEG_DEG_45_RAD: Self = Self(F::NEG_DEG_45_RAD);
     pub const NEG_DEG_60_RAD: Self = Self(F::NEG_DEG_60_RAD);
@@ -56,17 +57,13 @@ impl<F: FloatPlus + RadiansConst> Radians<F> {
 
     fn normalize<A: Into<F> + Copy>(arg: A) -> F {
         let mut result: F = arg.into();
-        if !result.is_nan() {
-            if result > F::DEG_180_RAD {
-                while result > F::DEG_180_RAD {
-                    result -= F::DEG_180_RAD * F::from(2.0).unwrap();
-                }
-            } else if result < -F::DEG_180_RAD {
-                while result < -F::DEG_180_RAD {
-                    result += F::DEG_180_RAD * F::from(2.0).unwrap();
-                }
-            }
-        };
+        debug_assert!(result.is_finite());
+        result %= F::DEG_360_RAD;
+        if result > F::DEG_180_RAD {
+            result -= F::DEG_360_RAD
+        } else if result < -F::DEG_180_RAD {
+            result += F::DEG_360_RAD
+        }
         result
     }
 
@@ -80,11 +77,11 @@ impl<F: FloatPlus + RadiansConst> Radians<F> {
         Self(cos.acos())
     }
 
-    pub fn atan2(x: F, y: F) -> Self {
+    pub fn atan2(y: F, x: F) -> Option<Self> {
         if x == F::ZERO && y == F::ZERO {
-            Self(F::nan())
+            None
         } else {
-            Self(y.atan2(x))
+            Some(Self(y.atan2(x)))
         }
     }
 
@@ -98,10 +95,6 @@ impl<F: FloatPlus + RadiansConst> Radians<F> {
 
     pub fn from_degrees(f: F) -> Self {
         f.to_radians().into()
-    }
-
-    pub fn is_nan(self) -> bool {
-        self.0.is_nan()
     }
 
     pub fn radians(self) -> F {
@@ -129,11 +122,8 @@ impl<F: FloatPlus + RadiansConst> Radians<F> {
     }
 
     pub fn xy(self) -> (F, F) {
-        if self.0.is_nan() {
-            (F::from(0.0).unwrap(), F::from(0.0).unwrap())
-        } else {
-            (self.0.to_radians().cos(), self.0.to_radians().sin())
-        }
+        debug_assert!(self.0.is_finite());
+        (self.0.to_radians().cos(), self.0.to_radians().sin())
     }
 }
 
@@ -149,13 +139,20 @@ impl<F: FloatPlus + RadiansConst> FloatApproxEq<F> for Radians<F> {
 
 impl<F: FloatPlus + RadiansConst> From<F> for Radians<F> {
     fn from(f: F) -> Self {
+        debug_assert!(f.is_finite());
         Self(Self::normalize(f))
     }
 }
 
-impl<F: FloatPlus + RadiansConst> From<(F, F)> for Radians<F> {
-    fn from(xy: (F, F)) -> Self {
-        Self::atan2(xy.0, xy.1)
+impl<F: FloatPlus + RadiansConst> std::convert::TryFrom<(F, F)> for Radians<F> {
+    type Error = &'static str;
+
+    fn try_from(xy: (F, F)) -> Result<Self, Self::Error> {
+        if let Some(radians) = Self::atan2(xy.1, xy.0) {
+            Ok(radians)
+        } else {
+            Err("(0.0, 0.0) cannot be converted to an angle")
+        }
     }
 }
 
@@ -211,13 +208,8 @@ impl<F: FloatPlus + RadiansConst> SubAssign for Radians<F> {
 /// evaluating equality i.e. -PI and PI are the same angle.
 impl<F: FloatPlus + RadiansConst> PartialEq for Radians<F> {
     fn eq(&self, other: &Self) -> bool {
-        if self.0.is_nan() {
-            other.0.is_nan()
-        } else if other.0.is_nan() {
-            false
-        } else {
-            (*self - *other).0 == F::from(0.0).unwrap()
-        }
+        debug_assert!(self.0.is_finite() && other.0.is_finite());
+        (*self - *other).0 == F::from(0.0).unwrap()
     }
 }
 
@@ -225,23 +217,14 @@ impl<F: FloatPlus + RadiansConst> PartialEq for Radians<F> {
 /// evaluating order.
 impl<F: FloatPlus + RadiansConst> PartialOrd for Radians<F> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.0.is_nan() {
-            if other.0.is_nan() {
-                Some(Ordering::Equal)
-            } else {
-                None
-            }
-        } else if other.0.is_nan() {
-            None
+        debug_assert!(self.0.is_finite() && other.0.is_finite());
+        let diff = (*self - *other).0;
+        if diff < F::ZERO {
+            Some(Ordering::Less)
+        } else if diff > F::ZERO {
+            Some(Ordering::Greater)
         } else {
-            let diff = (*self - *other).0;
-            if diff < F::from(0.0).unwrap() {
-                Some(Ordering::Less)
-            } else if diff > F::from(0.0).unwrap() {
-                Some(Ordering::Greater)
-            } else {
-                Some(Ordering::Equal)
-            }
+            Some(Ordering::Equal)
         }
     }
 }
@@ -254,7 +237,9 @@ where
     type Output = Self;
 
     fn div(self, rhs: Scalar) -> Self::Output {
-        Radians::from(self.0 / rhs.into())
+        let rhs: F = rhs.into();
+        debug_assert!(rhs.is_normal());
+        Radians::from(self.0 / rhs)
     }
 }
 
@@ -264,7 +249,9 @@ where
     Scalar: Into<F> + Copy,
 {
     fn div_assign(&mut self, rhs: Scalar) {
-        self.0 = Self::normalize(self.0 / rhs.into())
+        let rhs: F = rhs.into();
+        debug_assert!(rhs.is_normal());
+        self.0 = Self::normalize(self.0 / rhs)
     }
 }
 
@@ -354,12 +341,11 @@ mod tests {
 
     #[test]
     fn atan2() {
-        assert!(Radians::<f64>::atan2(0.0, 0.0).is_nan());
-        assert!(!Radians::<f64>::atan2(0.0, 0.01).is_nan());
-        assert_eq!(Radians::<f64>::atan2(0.0, 0.01).degrees(), 90.0);
-        assert_eq!(Radians::<f64>::atan2(0.0, -0.1).degrees(), -90.0);
-        assert_eq!(Radians::<f64>::atan2(0.1, 0.1).degrees(), 45.0);
-        assert_eq!(Radians::<f64>::atan2(-0.1, 0.1).degrees(), 135.0);
+        assert!(Radians::<f64>::atan2(0.0, 0.0).is_none());
+        assert_eq!(Radians::<f64>::atan2(0.01, 0.0).unwrap().degrees(), 90.0);
+        assert_eq!(Radians::<f64>::atan2(-0.1, 0.0,).unwrap().degrees(), -90.0);
+        assert_eq!(Radians::<f64>::atan2(0.1, 0.1).unwrap().degrees(), 45.0);
+        assert_eq!(Radians::<f64>::atan2(0.1, -0.1,).unwrap().degrees(), 135.0);
     }
 
     #[test]

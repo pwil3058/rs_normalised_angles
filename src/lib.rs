@@ -32,13 +32,6 @@ impl<F: FloatPlus + RadiansConst + DegreesConst> Angle<F> {
         }
     }
 
-    pub fn is_nan(&self) -> bool {
-        match self {
-            Angle::Degrees(degrees) => degrees.is_nan(),
-            Angle::Radians(radians) => radians.is_nan(),
-        }
-    }
-
     pub fn radians(&self) -> Radians<F> {
         match self {
             Angle::Degrees(degrees) => degrees.radians().into(),
