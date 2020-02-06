@@ -7,6 +7,7 @@ extern crate serde_derive;
 
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
+    hash::{Hash, Hasher},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
@@ -18,7 +19,7 @@ pub mod radians;
 pub use crate::degrees::*;
 pub use crate::radians::*;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Angle<F: FloatPlus + RadiansConst + DegreesConst> {
     Degrees(Degrees<F>),
     Radians(Radians<F>),
@@ -204,6 +205,18 @@ impl<F: FloatPlus + RadiansConst + DegreesConst> PartialEq for Angle<F> {
                 Angle::Radians(other) => radians.eq(other),
             },
         }
+    }
+}
+
+/// Takes into account the circular nature of angle values when
+/// evaluating equality i.e. -180 and 180 have the same hash value.
+impl<F: FloatPlus + RadiansConst + DegreesConst + Hash> Hash for Angle<F> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let degrees: Degrees<F> = match *self {
+            Angle::Degrees(angle) => angle,
+            Angle::Radians(angle) => angle.into(),
+        };
+        degrees.hash(state);
     }
 }
 
