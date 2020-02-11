@@ -3,6 +3,7 @@
 ///! confines of a circle (i.e. their value is guaranteed to be in the range -PI to +PI).
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
+    hash::{Hash, Hasher},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
@@ -32,7 +33,7 @@ pub trait RadiansConst: Copy {
     const NEG_DEG_180_RAD: Self;
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Radians<F: FloatPlus + RadiansConst>(F);
 
 impl<F: FloatPlus + RadiansConst> Radians<F> {
@@ -209,7 +210,19 @@ impl<F: FloatPlus + RadiansConst> SubAssign for Radians<F> {
 impl<F: FloatPlus + RadiansConst> PartialEq for Radians<F> {
     fn eq(&self, other: &Self) -> bool {
         debug_assert!(self.0.is_finite() && other.0.is_finite());
-        (*self - *other).0 == F::from(0.0).unwrap()
+        (*self - *other).0 == F::ZERO
+    }
+}
+
+/// Takes into account the circular nature of angle values when
+/// evaluating equality i.e. -180 and 180 have the same hash value.
+impl<F: FloatPlus + RadiansConst + Hash> Hash for Radians<F> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        if *self == Self::NEG_DEG_180_RAD {
+            Self::DEG_180_RAD.hash(state);
+        } else {
+            self.0.hash(state);
+        }
     }
 }
 

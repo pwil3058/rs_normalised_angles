@@ -3,6 +3,7 @@
 ///! confines of a circle (i.e. their value is guaranteed to be in the range -180 to +180).
 use std::{
     cmp::{Ordering, PartialEq, PartialOrd},
+    hash::{Hash, Hasher},
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
@@ -30,7 +31,7 @@ pub trait DegreesConst: Copy {
     const NEG_DEG_180: Self;
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Default)]
 pub struct Degrees<F: FloatPlus + DegreesConst>(F);
 
 impl<F: FloatPlus + DegreesConst> Degrees<F> {
@@ -195,11 +196,23 @@ impl<F: FloatPlus + DegreesConst> SubAssign for Degrees<F> {
 }
 
 /// Takes into account the circular nature of angle values when
-/// evaluating equality i.e. -PI and PI are the same angle.
+/// evaluating equality i.e. -180 and 180 are the same angle.
 impl<F: FloatPlus + DegreesConst> PartialEq for Degrees<F> {
     fn eq(&self, other: &Self) -> bool {
         debug_assert!(self.0.is_finite() && other.0.is_finite());
-        (*self - *other).0 == F::from(0.0).unwrap()
+        (*self - *other).0 == F::ZERO
+    }
+}
+
+/// Takes into account the circular nature of angle values when
+/// evaluating equality i.e. -180 and 180 have the same hash value.
+impl<F: FloatPlus + DegreesConst + Hash> Hash for Degrees<F> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        if *self == Self::NEG_DEG_180 {
+            Self::DEG_180.hash(state);
+        } else {
+            self.0.hash(state);
+        }
     }
 }
 
