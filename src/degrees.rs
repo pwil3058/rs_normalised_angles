@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::radians::*;
-pub use float_plus::*;
+pub use num_traits_plus::float_plus::*;
 
 pub trait DegreesConst: Copy {
     const DEG_0: Self;
@@ -312,7 +312,7 @@ impl DegreesConst for f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use float_plus::assert_approx_eq;
+    use num_traits_plus::{assert_approx_eq, assert_approx_ne};
 
     #[test]
     fn default() {

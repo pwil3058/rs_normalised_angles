@@ -10,7 +10,7 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-pub use float_plus::*;
+pub use num_traits_plus::float_plus::*;
 
 pub mod degrees;
 pub mod radians;
@@ -283,6 +283,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num_traits_plus::assert_approx_eq;
 
     #[test]
     fn addition() {

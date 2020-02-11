@@ -6,7 +6,7 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-use float_plus::*;
+use num_traits_plus::float_plus::*;
 
 use crate::degrees::Degrees;
 use crate::DegreesConst;
@@ -322,6 +322,7 @@ impl RadiansConst for f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num_traits_plus::assert_approx_eq;
 
     #[test]
     fn normalize() {
