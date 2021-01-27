@@ -204,6 +204,8 @@ impl<F: FloatPlus + DegreesConst> PartialEq for Degrees<F> {
     }
 }
 
+impl<F: FloatPlus + DegreesConst> Eq for Degrees<F> {}
+
 /// Takes into account the circular nature of angle values when
 /// evaluating equality i.e. -180 and 180 have the same hash value.
 impl<F: FloatPlus + DegreesConst + Hash> Hash for Degrees<F> {
@@ -229,6 +231,12 @@ impl<F: FloatPlus + DegreesConst> PartialOrd for Degrees<F> {
         } else {
             Some(Ordering::Equal)
         }
+    }
+}
+
+impl<F: FloatPlus + DegreesConst> Ord for Degrees<F> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
     }
 }
 

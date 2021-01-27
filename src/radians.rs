@@ -214,6 +214,8 @@ impl<F: FloatPlus + RadiansConst> PartialEq for Radians<F> {
     }
 }
 
+impl<F: FloatPlus + RadiansConst> Eq for Radians<F> {}
+
 /// Takes into account the circular nature of angle values when
 /// evaluating equality i.e. -180 and 180 have the same hash value.
 impl<F: FloatPlus + RadiansConst + Hash> Hash for Radians<F> {
