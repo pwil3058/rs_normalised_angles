@@ -8,7 +8,7 @@ use std::{
 };
 
 use crate::radians::*;
-pub use num_traits_plus::float_plus::*;
+use num_traits_plus::float_plus::*;
 
 pub trait DegreesConst: Copy {
     const DEG_0: Self;
